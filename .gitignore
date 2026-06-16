@@ -1,0 +1,231 @@
+# ==========================================
+# Operating System Files
+# ==========================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Visual Studio
+# ==========================================
+
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache
+*.cache
+*.dbmdl
+
+# ==========================================
+# Build Results
+# ==========================================
+
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+Build/
+bin/
+obj/
+out/
+
+# ==========================================
+# ASP.NET Core
+# ==========================================
+
+publish/
+wwwroot/lib/
+
+# User secrets
+secrets.json
+
+# Logs
+logs/
+*.log
+
+# ==========================================
+# Entity Framework
+# ==========================================
+
+*.db
+*.mdf
+*.ldf
+
+# LocalDB
+App_Data/*.mdf
+App_Data/*.ldf
+
+# ==========================================
+# SQL Server
+# ==========================================
+
+*.bak
+*.trn
+
+# SQL Server Data Tools
+*.jfm
+
+# ==========================================
+# NuGet
+# ==========================================
+
+packages/
+*.nupkg
+
+# NuGet Symbol Packages
+*.snupkg
+
+# ==========================================
+# Rider
+# ==========================================
+
+.idea/
+*.sln.iml
+
+# ==========================================
+# VS Code
+# ==========================================
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# ==========================================
+# Node / Vue
+# ==========================================
+
+frontend/node_modules/
+node_modules/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vue Build Output
+frontend/dist/
+dist/
+
+# Vite
+.vite/
+
+# ==========================================
+# Environment Files
+# ==========================================
+
+.env
+.env.*
+!.env.example
+
+appsettings.Development.json
+appsettings.Local.json
+
+# ==========================================
+# Test Results
+# ==========================================
+
+TestResults/
+*.trx
+
+coverage/
+coverage.xml
+
+# ==========================================
+# SonarQube
+# ==========================================
+
+.sonarqube/
+
+# ==========================================
+# Docker
+# ==========================================
+
+docker-compose.override.yml
+
+# ==========================================
+# Azure
+# ==========================================
+
+PublishProfiles/
+*.publishsettings
+
+# ==========================================
+# GitHub Actions Artifacts
+# ==========================================
+
+artifacts/
+
+# ==========================================
+# Temporary Files
+# ==========================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# ==========================================
+# Documentation Generated Files
+# ==========================================
+
+docs/generated/
+
+# ==========================================
+# JetBrains
+# ==========================================
+
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# ==========================================
+# BenchmarkDotNet
+# ==========================================
+
+BenchmarkDotNet.Artifacts/
+
+# ==========================================
+# npm cache
+# ==========================================
+
+.npm/
+.pnpm-store/
+
+# ==========================================
+# Yarn
+# ==========================================
+
+.yarn/
+.yarn-cache/
+
+# ==========================================
+# Optional Uploads / Exports
+# ==========================================
+
+exports/
+uploads/
+
+# ==========================================
+# Sensitive Files
+# ==========================================
+
+*.pfx
+*.key
+*.pem
+*.crt
+
+# ==========================================
+# Keep Example Configs
+# ==========================================
+
+!appsettings.json
+!frontend/.env.example
