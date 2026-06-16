@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Referral_Management.Api.Models;
 
-public partial class DbContext : DbContext
+public partial class AppDbContext : DbContext
 {
-    public DbContext()
+    public AppDbContext()
     {
     }
 
-    public DbContext(DbContextOptions<DbContext> options)
+    public AppDbContext(DbContextOptions<DbContext> options)
         : base(options)
     {
     }
