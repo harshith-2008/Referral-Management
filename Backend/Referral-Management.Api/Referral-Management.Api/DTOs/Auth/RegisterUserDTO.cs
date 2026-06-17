@@ -7,9 +7,11 @@ public class RegisterUserDTO
     // Common User Fields
 
     [Required]
+    [Range(2, 4, ErrorMessage = "Invalid role selected.")]
     public int RoleId { get; set; }
 
     [Required]
+    [Range(1, int.MaxValue)]
     public int FacilityId { get; set; }
 
     [Required]
@@ -25,6 +27,8 @@ public class RegisterUserDTO
     public string Email { get; set; } = string.Empty;
 
     [Required]
+    [MinLength(6, ErrorMessage = "Password should have minimum of 6 characters")]
+    [MaxLength(100)]
     public string Password { get; set; } = string.Empty;
 
     [Required]
@@ -39,6 +43,7 @@ public class RegisterUserDTO
 
     public DateOnly? Dob { get; set; }
 
+    [MaxLength(1)]
     public string? Gender { get; set; }
 
     public string? InsuranceProviderName { get; set; }

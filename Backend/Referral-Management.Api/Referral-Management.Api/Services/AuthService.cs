@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Referral_Management.Api.Exceptions;
 
 namespace Referral_Management.Api.Services;
 
@@ -23,17 +24,34 @@ public class AuthService : IAuthService
 
     public async Task<RegisterResponseDTO> RegisterAsync(RegisterUserDTO dto)
     {
-        await using var transaction =
-            await _context.Database.BeginTransactionAsync();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
+            var email = dto.Email.Trim().ToLower();
+
             var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+                .FirstOrDefaultAsync(u => u.Email == email);
 
             if (existingUser != null)
             {
-                throw new Exception("Email already exists.");
+                throw new BadRequestException("Email already exists.");
+            }
+
+            var facilityExists = await _context.Facilities
+                .AnyAsync(f => f.FacilityId == dto.FacilityId);
+
+            if (!facilityExists)
+            {
+                throw new BadRequestException("Selected facility does not exist.");
+            }
+
+            var roleExists = await _context.Roles
+                .AnyAsync(r => r.RoleId == dto.RoleId);
+
+            if (!roleExists)
+            {
+                throw new BadRequestException("Selected role does not exist.");
             }
 
             var user = new User
@@ -42,7 +60,7 @@ public class AuthService : IAuthService
                 FacilityId = dto.FacilityId,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                Email = dto.Email,
+                Email = email,
                 PhoneNumber = dto.PhoneNumber,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Status = true,
@@ -56,6 +74,10 @@ public class AuthService : IAuthService
 
             switch (dto.RoleId)
             {
+                case 1:
+                    await CreateAdminAsync(user.UserId);
+                    break;
+
                 case 2:
                     await CreateReferralCoordinatorAsync(user.UserId, dto);
                     break;
@@ -69,7 +91,7 @@ public class AuthService : IAuthService
                     break;
 
                 default:
-                    throw new Exception("Invalid role selected.");
+                    throw new BadRequestException("Invalid role selected.");
             }
 
             await transaction.CommitAsync();
@@ -88,26 +110,29 @@ public class AuthService : IAuthService
     }
 
 
-    public async Task<LoginResponseDTO> LoginAsync(
-    LoginDTO loginDTO)
-    {
+    public async Task<LoginResponseDTO> LoginAsync(LoginDTO loginDTO) {
+
+        var email = loginDTO.Email?.Trim().ToLower() ?? string.Empty;
+
         var user = await _context.Users
-            .FirstOrDefaultAsync(u =>
-                u.Email == loginDTO.Email);
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
         {
-            throw new Exception("Invalid email or password.");
+            throw new UnauthorizedException("Invalid email or password.");
         }
 
-        var passwordValid =
-            BCrypt.Net.BCrypt.Verify(
-                loginDTO.Password,
-                user.PasswordHash);
+        if (!user.Status)
+        {
+            throw new UnauthorizedException("Account is inactive.");
+        }
+
+        var passwordValid = BCrypt.Net.BCrypt.Verify(loginDTO.Password,user.PasswordHash);
 
         if (!passwordValid)
         {
-            throw new Exception("Invalid email or password.");
+            throw new UnauthorizedException("Invalid email or password.");
         }
 
         var token = GenerateJwtToken(user);
@@ -125,41 +150,40 @@ public class AuthService : IAuthService
     {
         var key = _configuration["Jwt:Key"];
 
-        var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier,
-            user.UserId.ToString()),
+        var claims = new List<Claim>{
+            new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role,user.Role.RoleName),
+            new Claim("FacilityId", user.FacilityId.ToString())
+        };
 
-        new Claim(ClaimTypes.Email,
-            user.Email),
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!));
 
-        new Claim(ClaimTypes.Role,
-            user.RoleId.ToString())
-    };
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        var securityKey =
-            new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(key!));
-
-        var credentials =
-            new SigningCredentials(
-                securityKey,
-                SecurityAlgorithms.HmacSha256);
-
-        var token =
-            new JwtSecurityToken(
+        var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(
-                    Convert.ToInt32(
-                        _configuration["Jwt:ExpiryMinutes"])),
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration["Jwt:ExpiryMinutes"])),
                 signingCredentials: credentials);
 
-        return new JwtSecurityTokenHandler()
-            .WriteToken(token);
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    private async Task CreateAdminAsync(int userId)
+    {
+        var admin = new Admin
+        {
+            UserId = userId
+        };
+
+        _context.Admins.Add(admin);
+
+        await _context.SaveChangesAsync();
+
+    }
+   
     private async Task CreateReferralCoordinatorAsync(int userId, RegisterUserDTO dto)
     {
         var coordinator = new ReferralCoordinator
@@ -176,13 +200,29 @@ public class AuthService : IAuthService
     private async Task CreatePatientAsync( int userId, RegisterUserDTO dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Mrn))
-            throw new Exception("MRN is required.");
+            throw new BadRequestException("MRN is required.");
+
         if (dto.Dob == null)
-            throw new Exception("DOB is required.");
+            throw new BadRequestException("DOB is required.");
+
         if (string.IsNullOrWhiteSpace(dto.Gender))
-            throw new Exception("Gender is required.");
+            throw new BadRequestException("Gender is required.");
+
         if (string.IsNullOrWhiteSpace(dto.PatientAddress))
-            throw new Exception("Patient address is required.");
+            throw new BadRequestException("Patient address is required.");
+
+        var mrnExists = await _context.Patients
+            .AnyAsync(p => p.Mrn == dto.Mrn);
+
+        if (mrnExists)
+        {
+            throw new BadRequestException("MRN already exists.");
+        }
+
+        if (dto.Dob > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            throw new BadRequestException("DOB cannot be in the future.");
+        }
 
         var patient = new Patient
         {
@@ -190,14 +230,10 @@ public class AuthService : IAuthService
             Mrn = dto.Mrn,
             Dob = dto.Dob.Value,
             Gender = dto.Gender,
-            InsuranceProviderName =
-                dto.InsuranceProviderName,
-            InsuranceStatus =
-                dto.InsuranceStatus,
-            PatientAddress =
-                dto.PatientAddress,
-            PrimaryFacilityId =
-                dto.FacilityId,
+            InsuranceProviderName = dto.InsuranceProviderName,
+            InsuranceStatus = dto.InsuranceStatus,
+            PatientAddress = dto.PatientAddress,
+            PrimaryFacilityId = dto.FacilityId,
             Status = true
         };
 
@@ -209,8 +245,16 @@ public class AuthService : IAuthService
     {
         if (dto.Specialties == null || !dto.Specialties.Any())
         {
-            throw new Exception(
-                "At least one specialty is required.");
+            throw new BadRequestException("At least one specialty is required.");
+        }
+
+        var duplicateSpecialties = dto.Specialties
+            .GroupBy(s => s.SpecialtyId)
+            .Any(g => g.Count() > 1);
+
+        if (duplicateSpecialties)
+        {
+            throw new BadRequestException("Duplicate specialties are not allowed.");
         }
 
         var primaryCount = dto.Specialties
@@ -218,8 +262,31 @@ public class AuthService : IAuthService
 
         if (primaryCount != 1)
         {
-            throw new Exception(
-                "Exactly one primary specialty is required.");
+            throw new BadRequestException("Exactly one primary specialty is required.");
+        }
+
+        foreach (var specialty in dto.Specialties)
+        {
+            var specialtyExists = await _context.Specialties
+                    .AnyAsync(s => s.SpecialtyId == specialty.SpecialtyId);
+
+            if (!specialtyExists)
+            {
+                throw new BadRequestException($"Specialty {specialty.SpecialtyId} does not exist.");
+            }
+        }
+
+        if (dto.ShiftBlockId.HasValue)
+        {
+            var shiftExists = await _context.ShiftBlocks
+                    .AnyAsync(s =>
+                        s.ShiftBlockId ==
+                        dto.ShiftBlockId);
+
+            if (!shiftExists)
+            {
+                throw new BadRequestException("Selected shift block does not exist.");
+            }
         }
 
         var specialist = new Specialist
@@ -236,19 +303,14 @@ public class AuthService : IAuthService
 
         foreach (var specialty in dto.Specialties)
         {
-            var specialistSpecialty =
-                new SpecialistSpeciality
+            var specialistSpecialty = new SpecialistSpeciality
                 {
-                    SpecialistId =
-                        specialist.SpecialistId,
-                    SpecialtyId =
-                        specialty.SpecialtyId,
-                    IsPrimary =
-                        specialty.IsPrimary
+                    SpecialistId = specialist.SpecialistId,
+                    SpecialtyId = specialty.SpecialtyId,
+                    IsPrimary = specialty.IsPrimary
                 };
 
-            _context.SpecialistSpecialities
-                .Add(specialistSpecialty);
+            _context.SpecialistSpecialities.Add(specialistSpecialty);
         }
 
         await _context.SaveChangesAsync();
