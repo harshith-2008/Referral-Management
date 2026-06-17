@@ -56,6 +56,10 @@ public class AuthService : IAuthService
 
             switch (dto.RoleId)
             {
+                case 1:
+                    await CreateAdminAsync(user.UserId);
+                    break;
+
                 case 2:
                     await CreateReferralCoordinatorAsync(user.UserId, dto);
                     break;
@@ -88,8 +92,7 @@ public class AuthService : IAuthService
     }
 
 
-    public async Task<LoginResponseDTO> LoginAsync(
-    LoginDTO loginDTO)
+    public async Task<LoginResponseDTO> LoginAsync( LoginDTO loginDTO)
     {
         var user = await _context.Users
             .Include(u => u.Role)
@@ -156,6 +159,18 @@ public class AuthService : IAuthService
             .WriteToken(token);
     }
 
+    private async Task CreateAdminAsync(int userId)
+    {
+        var admin = new Admin
+        {
+            UserId = userId
+        };
+
+        _context.Admins.Add(admin);
+
+        await _context.SaveChangesAsync();
+
+    }
     private async Task CreateReferralCoordinatorAsync(int userId, RegisterUserDTO dto)
     {
         var coordinator = new ReferralCoordinator
