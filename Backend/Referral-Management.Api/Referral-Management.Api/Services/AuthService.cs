@@ -92,6 +92,7 @@ public class AuthService : IAuthService
     LoginDTO loginDTO)
     {
         var user = await _context.Users
+            .Include(u => u.Role)
             .FirstOrDefaultAsync(u =>
                 u.Email == loginDTO.Email);
 
@@ -125,17 +126,12 @@ public class AuthService : IAuthService
     {
         var key = _configuration["Jwt:Key"];
 
-        var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier,
-            user.UserId.ToString()),
-
-        new Claim(ClaimTypes.Email,
-            user.Email),
-
-        new Claim(ClaimTypes.Role,
-            user.RoleId.ToString())
-    };
+        var claims = new List<Claim>{
+            new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role,user.Role.RoleName),
+            new Claim("FacilityId", user.FacilityId.ToString())
+        };
 
         var securityKey =
             new SymmetricSecurityKey(

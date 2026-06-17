@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Referral_Management.Api.DTOs.Auth;
 using Referral_Management.Api.Services.Interfaces;
+using System.Security.Claims;
+
 
 namespace Referral_Management.Api.Controllers;
 
@@ -41,5 +44,17 @@ public class AuthController : ControllerBase
             await _authService.LoginAsync(loginDTO);
 
         return Ok(response);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        return Ok(new
+        {
+            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+            Email = User.FindFirst(ClaimTypes.Email)?.Value,
+            Role = User.FindFirst(ClaimTypes.Role)?.Value
+        });
     }
 }
