@@ -4,7 +4,6 @@ using Referral_Management.Api.DTOs.Auth;
 using Referral_Management.Api.Services.Interfaces;
 using System.Security.Claims;
 
-
 namespace Referral_Management.Api.Controllers;
 
 [ApiController]
@@ -12,6 +11,7 @@ namespace Referral_Management.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+
     public AuthController(IAuthService authService)
     {
         _authService = authService;
@@ -21,24 +21,15 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<RegisterResponseDTO>> Register(
         [FromBody] RegisterUserDTO registerUserDTO)
     {
-        try
-        {
-            var response = await _authService.RegisterAsync(registerUserDTO);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new
-            {
-                Message = ex.Message,
-                InnerException = ex.InnerException?.Message
-            });
-        }
+        var response =
+            await _authService.RegisterAsync(registerUserDTO);
+
+        return Ok(response);
     }
 
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDTO>> Login(
-    LoginDTO loginDTO)
+        [FromBody] LoginDTO loginDTO)
     {
         var response =
             await _authService.LoginAsync(loginDTO);
@@ -52,9 +43,17 @@ public class AuthController : ControllerBase
     {
         return Ok(new
         {
-            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-            Email = User.FindFirst(ClaimTypes.Email)?.Value,
-            Role = User.FindFirst(ClaimTypes.Role)?.Value
+            UserId =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+
+            Email =
+                User.FindFirst(ClaimTypes.Email)?.Value,
+
+            Role =
+                User.FindFirst(ClaimTypes.Role)?.Value,
+
+            FacilityId =
+                User.FindFirst("FacilityId")?.Value
         });
     }
 }
