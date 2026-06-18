@@ -46,6 +46,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();  
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
