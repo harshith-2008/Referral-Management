@@ -46,7 +46,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IReferralService1, ReferralService1>();
+
+builder.Services.AddScoped<ISpecialistService, SpecialistService>();
+builder.Services.AddScoped<IReferralService, ReferralService>();
+
 
 
 
