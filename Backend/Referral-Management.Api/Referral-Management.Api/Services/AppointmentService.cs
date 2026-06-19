@@ -1,0 +1,313 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Referral_Management.Api.Models;
+using Referral_Management.Api.Services.Interfaces;
+using Referral_Management.Api.Exceptions;
+
+namespace Referral_Management.Api.Services
+{
+    public class AppointmentService : IAppointmentService
+    {
+
+        private readonly AppDbContext _context;
+
+        public AppointmentService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+
+        public async Task<AvailableSlotsResponseDTO> GetAvailableSlotsAsync(int specialistId, DateOnly date)
+        {
+            if (date < DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                throw new BadRequestException(
+                    "Cannot retrieve slots for past dates.");
+
+            }
+
+            var specialist = await _context.Specialists
+                .AsNoTracking()
+                .Include(s => s.ShiftBlock)
+                .FirstOrDefaultAsync(s => s.SpecialistId == specialistId);
+
+            if (specialist == null)
+            {
+                throw new BadRequestException("Specialist not found.");
+            }
+
+            if (!specialist.Status)
+            {
+                throw new BadRequestException(
+                    "Specialist is inactive.");
+            }
+
+            if (specialist.ShiftBlock == null)
+            {
+                throw new BadRequestException("Shift block not assigned.");
+            }
+
+            var bookedSlots = (await _context.Appointments
+                .AsNoTracking()
+                .Where(a =>
+                    a.SpecialistId == specialistId &&
+                    a.AppointmentDate == date)
+                .Select(a => a.AppointmentTime)
+                .ToListAsync())
+                .ToHashSet();
+
+            var availableSlots = new List<AvailableSlotDTO>();
+
+            var currentSlot = specialist.ShiftBlock.StartTime;
+
+            while (currentSlot < specialist.ShiftBlock.EndTime)
+            {
+                if (!bookedSlots.Contains(currentSlot))
+                {
+                    availableSlots.Add(new AvailableSlotDTO
+                    {
+                        StartTime = currentSlot,
+                        EndTime = currentSlot.AddHours(1)
+
+                    });
+                }
+
+                currentSlot = currentSlot.AddHours(1);
+            }
+
+            return new AvailableSlotsResponseDTO
+            {
+                SpecialistId = specialistId,
+                Date = date,
+                Slots = availableSlots
+            };
+        }
+
+        public async Task<DailyScheduleResponseDTO> GetScheduleAsync(int specialistId, DateOnly date)
+        {
+            var appointments = await _context.Appointments
+                .AsNoTracking()
+                .Where(a =>
+                    a.SpecialistId == specialistId &&
+                    a.AppointmentDate == date)
+                .OrderBy(a => a.AppointmentTime)
+                .Select(a => new AppointmentScheduleDTO
+                {
+                    AppointmentId = a.AppointmentId,
+
+                    AppointmentTime = a.AppointmentTime,
+
+                    PatientName =
+                        a.Patient.User.FirstName + " " +
+                        a.Patient.User.LastName,
+
+                    Mrn = a.Patient.Mrn,
+
+                    AppointmentStatus =
+                        a.AppointmentStatus.StatusName
+                })
+                .ToListAsync();
+
+            return new DailyScheduleResponseDTO
+            {
+                Date = date,
+                Appointments = appointments
+            };
+        }
+
+        public async Task<AppointmentResponseDTO> CreateAppointmentAsync(CreateAppointmentDTO request)
+        {
+            if (request.AppointmentDate < DateOnly.FromDateTime(DateTime.Now))
+            {
+                throw new BadRequestException("Cannot schedule appointment in the past.");
+            }
+
+            var referral = await _context.Referrals
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r =>
+                    r.ReferralId == request.ReferralId);
+
+            if (referral == null)
+            {
+                throw new BadRequestException("Referral not found.");
+            }
+
+            var specialist = await _context.Specialists
+                .Include(s => s.ShiftBlock)
+                .FirstOrDefaultAsync(s =>
+                    s.SpecialistId == request.SpecialistId);
+
+            if (specialist == null)
+            {
+                throw new BadRequestException("Specialist not found.");
+            }
+
+            if (!specialist.Status)
+            {
+                throw new BadRequestException("Specialist is inactive.");
+            }
+
+            if (specialist.ShiftBlock == null)
+            {
+                throw new BadRequestException("Shift block not assigned.");
+            }
+
+            // Validate slot within shift
+            if (request.AppointmentTime < specialist.ShiftBlock.StartTime ||
+                request.AppointmentTime >= specialist.ShiftBlock.EndTime)
+            {
+                throw new BadRequestException("Invalid appointment slot.");
+            }
+
+            // Validate slot alignment
+            if (request.AppointmentTime.Minute != 0)
+            {
+                throw new BadRequestException("Appointments must start on the hour.");
+            }
+
+            // Validate slot availability
+            bool slotBooked = await _context.Appointments
+                .AnyAsync(a =>
+                    a.SpecialistId == request.SpecialistId &&
+                    a.AppointmentDate == request.AppointmentDate &&
+                    a.AppointmentTime == request.AppointmentTime);
+
+            if (slotBooked)
+            {
+                throw new BadRequestException("Selected slot is already booked.");
+            }
+
+            var appointment = new Appointment
+            {
+                ReferralId = referral.ReferralId,
+                PatientId = referral.PatientId,
+                SpecialistId = request.SpecialistId,
+                AppointmentDate = request.AppointmentDate,
+                AppointmentTime = request.AppointmentTime,
+                AppointmentStatusId = 1
+            };
+
+            _context.Appointments.Add(appointment);
+
+            await _context.SaveChangesAsync();
+
+            return new AppointmentResponseDTO
+            {
+                AppointmentId = appointment.AppointmentId,
+                Message = "Appointment scheduled successfully."
+            };
+        }
+
+        public async Task<AppointmentDetailsDTO> GetAppointmentDetailsAsync(int appointmentId)
+        {
+            var appointment = await _context.Appointments
+                .AsNoTracking()
+                .Where(a => a.AppointmentId == appointmentId)
+                .Select(a => new AppointmentDetailsDTO
+                {
+                    AppointmentId = a.AppointmentId,
+                    ReferralId = a.ReferralId,
+                    AppointmentDate = a.AppointmentDate,
+                    AppointmentTime = a.AppointmentTime,
+                    AppointmentStatus = a.AppointmentStatus.StatusName,
+                    PatientId = a.PatientId,
+                    PatientName = a.Patient.User.FirstName + " " + a.Patient.User.LastName,
+                    Mrn = a.Patient.Mrn,
+                    SpecialistId = a.SpecialistId,
+                    SpecialistName = a.Specialist.User.FirstName + " " + a.Specialist.User.LastName,
+                    ReferralReason = a.Referral.ReferralReason
+                })
+                .FirstOrDefaultAsync();
+
+            if (appointment == null)
+            {
+                throw new BadRequestException("Appointment not found.");
+            }
+
+            return appointment;
+        }
+
+        public async Task<List<UserAppointmentDTO>> GetUserAppointmentsAsync(int userId)
+        {
+            var patient = await _context.Patients
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if(patient == null)
+            {
+                throw new BadRequestException("Patient not found.");
+            }
+
+            return await _context.Appointments
+                .AsNoTracking()
+                .Where(a => a.PatientId == patient.PatientId)
+                .OrderBy(a => a.AppointmentStatusId)
+                .ThenByDescending(a => a.AppointmentDate)
+                .ThenByDescending(a => a.AppointmentTime)
+                .Select(a => new UserAppointmentDTO
+                {
+                    AppointmentId = a.AppointmentId,
+                    ReferralId = a.ReferralId,
+                    AppointmentDate = a.AppointmentDate,
+                    AppointmentTime = a.AppointmentTime,
+                    SpecialistName =
+                        a.Specialist.User.FirstName + " " +
+                        a.Specialist.User.LastName,
+                    AppointmentStatus =
+                        a.AppointmentStatus.StatusName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<AppointmentStatusResponseDTO>UpdateAppointmentStatusAsync(UpdateAppointmentStatusDTO request)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.AppointmentStatus)
+                .FirstOrDefaultAsync(a =>
+                    a.AppointmentId == request.AppointmentId);
+
+            if (appointment == null)
+            {
+                throw new BadRequestException("Appointment not found.");
+            }
+
+            if (appointment.AppointmentStatusId == 2)
+            {
+                throw new BadRequestException("Cancelled appointments cannot be modified.");
+            }
+
+            if (appointment.AppointmentStatusId == 3)
+            {
+                throw new BadRequestException("Completed appointments cannot be modified.");
+            }
+
+            bool statusExists = await _context.AppointmentStatuses
+                .AnyAsync(s =>
+                    s.AppointmentStatusId ==
+                    request.AppointmentStatusId);
+
+            if (!statusExists)
+            {
+                throw new BadRequestException("Invalid appointment status.");
+            }
+
+            appointment.AppointmentStatusId = request.AppointmentStatusId;
+
+            await _context.SaveChangesAsync();
+
+            var statusName = await _context.AppointmentStatuses
+                .Where(s =>
+                    s.AppointmentStatusId ==
+                    request.AppointmentStatusId)
+                .Select(s => s.StatusName)
+                .FirstAsync();
+
+            return new AppointmentStatusResponseDTO
+            {
+                AppointmentId = appointment.AppointmentId,
+                Status = statusName,
+                Message = "Appointment status updated successfully."
+            };
+        }
+    }
+
+}
