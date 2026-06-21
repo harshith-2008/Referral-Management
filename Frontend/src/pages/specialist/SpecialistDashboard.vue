@@ -1,1 +1,1 @@
-<template><p>this is specialis dashbaord</p></template>
+<template><p>this is specialist dashbaord</p></template>
