@@ -1,4 +1,5 @@
 ﻿using Referral_Management.Api.DTOs.Patient;
+using Referral_Management.Api.Services;
 
 namespace Referral_Management.Api.Services
 {
@@ -45,3 +46,4 @@ namespace Referral_Management.Api.Services
             int appointmentId);
     }
 }
+
