@@ -1,23 +1,31 @@
 import api from "./axios";
 
+import type { ApiResponseDTO } from "../types/common";
+
 import type {
-  ReferralIntakeCreateDTO,
-  GetUrgencyLevelDTO,
-  GetSpecialityDTO,
-  ReferralIntakeResponseDTO,
+  CreateReferralRequestDTO,
+  ReferralDTO,
+  ReferralDetailDTO,
+  FacilityDTO,
 } from "../types/referral";
 
-export const createReferralIntake = (
-  specialistId: number,
-  data: ReferralIntakeCreateDTO,
-) =>
-  api.post<ReferralIntakeResponseDTO>(
-    `/specialist/referral-intake/${specialistId}`,
-    data,
+import type { SpecialistMatchDTO } from "../types/specialist";
+
+export const getRequestedReferrals = (coordinatorId: number) =>
+  api.get<ApiResponseDTO<ReferralDTO[]>>(
+    `/referral/requested/${coordinatorId}`
   );
 
-export const getUrgencyLevels = () =>
-  api.get<GetUrgencyLevelDTO[]>("/specialist/urgencyLevels");
+export const getReferralDetails = (referralId: number) =>
+  api.get<ApiResponseDTO<ReferralDetailDTO>>(`/referral/details/${referralId}`);
 
-export const getSpecialities = () =>
-  api.get<GetSpecialityDTO[]>("/specialist/specialities");
+export const getMatchingSpecialists = (referralId: number) =>
+  api.get<ApiResponseDTO<SpecialistMatchDTO[]>>(
+    `/referral/specialists/${referralId}`
+  );
+
+export const getFacilitiesDropdown = (referralId: number) =>
+  api.get<FacilityDTO[]>(`/referral/${referralId}/facilities-dropdown`);
+
+export const routeReferral = (data: CreateReferralRequestDTO) =>
+  api.post<ApiResponseDTO<any>>("/referral/route", data);
