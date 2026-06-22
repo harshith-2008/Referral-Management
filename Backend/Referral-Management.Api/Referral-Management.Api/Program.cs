@@ -46,13 +46,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();  
 
 builder.Services.AddScoped<ISpecialistService, SpecialistService>();
 builder.Services.AddScoped<IReferralService, ReferralService>();
 
-builder.Services.AddScoped<IPatientService, PatientService>();
-builder.Services.AddScoped<AdminService>();
 
 
 
