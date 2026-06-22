@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Referral_Management.Api.Models;
+using Referral_Management.Api.Services.Interfaces;
 
-public class AdminService
+public class AdminService : IAdminService
 {
     private readonly AppDbContext _context;
 

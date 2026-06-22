@@ -51,6 +51,9 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<ISpecialistService, SpecialistService>();
 builder.Services.AddScoped<IReferralService, ReferralService>();
 
+builder.Services.AddScoped<IPatientService,PatientService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 
 
