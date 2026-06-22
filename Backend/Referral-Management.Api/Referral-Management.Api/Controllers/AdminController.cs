@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Referral_Management.Api.Services.Interfaces;
 
 [ApiController]
 [Route("api/admin")]
 [Authorize(Roles = "Admin")]
 public class AdminController : ControllerBase
 {
-    private readonly AdminService _service;
+    private readonly IAdminService _service;
 
-    public AdminController(AdminService service)
+    public AdminController(IAdminService service)
     {
         _service = service;
     }
