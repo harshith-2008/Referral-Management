@@ -127,7 +127,7 @@ namespace Referral_Management.Api.Services
                         Urgency = r.UrgencyLevel.LevelName,
                         OriginFacility = r.OriginFacility.FacilityName,
                         DestinationFacility = r.DestinationFacility.FacilityName,
-                        CreatedAt = r.CreatedAt
+                        CreatedAt = System.DateTime.UtcNow
                     }).ToList()
             };
         }
@@ -154,7 +154,7 @@ namespace Referral_Management.Api.Services
                     Urgency = r.UrgencyLevel.LevelName,
                     OriginFacility = r.OriginFacility.FacilityName,
                     DestinationFacility = r.DestinationFacility.FacilityName,
-                    CreatedAt = r.CreatedAt
+                    CreatedAt = System.DateTime.UtcNow
                 })
                 .ToListAsync();
         }
@@ -185,7 +185,7 @@ namespace Referral_Management.Api.Services
                 Urgency = r.UrgencyLevel.LevelName,
                 OriginFacility = r.OriginFacility.FacilityName,
                 DestinationFacility = r.DestinationFacility.FacilityName,
-                CreatedAt = r.CreatedAt
+                CreatedAt = System.DateTime.UtcNow
             };
         }
 
@@ -205,7 +205,7 @@ namespace Referral_Management.Api.Services
             {
                 ReferralId = r.ReferralId,
                 ReferralStatus = r.ReferralStatus.StatusName,
-                LastUpdated = r.UpdatedAt
+                LastUpdated = System.DateTime.UtcNow
             };
         }
 

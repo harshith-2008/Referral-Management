@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Referral_Management.Api.DTOs.Patient;
 using Referral_Management.Api.Models;
 using Referral_Management.Api.Services.Interfaces;
 
@@ -45,7 +46,10 @@ public class AdminService : IAdminService
             .CountAsync();
 
         var delayed = await _context.Referrals
-            .Where(r => r.Appointments.Any(a => a.AppointmentDate > DateOnly.FromDateTime(r.CreatedAt.AddDays(5))))
+            .Where(r => r.Appointments.Any(a =>
+r.CreatedAt.HasValue &&
+a.AppointmentDate > DateOnly.FromDateTime(r.CreatedAt.Value.AddDays(5))
+))
             .CountAsync();
 
         var notCompleted = await _context.Referrals
@@ -124,7 +128,7 @@ public class AdminService : IAdminService
     public async Task<List<DailyReferralDto>> GetDailyReferralsAsync()
     {
         return await _context.Referrals
-            .GroupBy(r => r.CreatedAt.Date)
+            .GroupBy(r => r.CreatedAt.Value.Date)
             .Select(g => new DailyReferralDto
             {
                 Date = g.Key,
