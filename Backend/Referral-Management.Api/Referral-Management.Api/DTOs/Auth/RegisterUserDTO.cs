@@ -7,7 +7,7 @@ public class RegisterUserDTO
     // Common User Fields
 
     [Required]
-    [Range(2, 4, ErrorMessage = "Invalid role selected.")]
+    [Range(1, 4, ErrorMessage = "Invalid role selected.")]
     public int RoleId { get; set; }
 
     [Required]
