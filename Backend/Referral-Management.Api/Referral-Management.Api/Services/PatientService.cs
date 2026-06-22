@@ -14,6 +14,27 @@ namespace Referral_Management.Api.Services
             _context = context;
         }
 
+        public async Task<PatientReferralLookupDto> GetPatientForReferralAsync(string mrn)
+        {
+            var patient = await _context.Patients
+                .Include(p => p.User)
+                .Include(p => p.PrimaryFacility)
+                .FirstOrDefaultAsync(p => p.Mrn == mrn);
+
+            if (patient == null)
+                throw new NotFoundException("Patient not found.");
+
+            return new PatientReferralLookupDto
+            {
+                PatientId = patient.PatientId,
+                Mrn = patient.Mrn,
+                FullName = $"{patient.User.FirstName} {patient.User.LastName}",
+                Dob = patient.Dob,
+                Gender = patient.Gender,
+                FacilityName = patient.PrimaryFacility.FacilityName
+            };
+        }
+
         //==========================================================
         // Helper
         //==========================================================

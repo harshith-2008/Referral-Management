@@ -78,6 +78,10 @@ CREATE TABLE [User] (
     CreatedAt       DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
     UpdatedAt       DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
 
+    ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+    ValidTo   DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+    PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo),
+
     CONSTRAINT FK_User_Role
         FOREIGN KEY (RoleId)
         REFERENCES Role(RoleId),
@@ -85,6 +89,13 @@ CREATE TABLE [User] (
     CONSTRAINT FK_User_Facility
         FOREIGN KEY (FacilityId)
         REFERENCES Facility(FacilityId)
+)
+WITH
+(
+    SYSTEM_VERSIONING = ON
+    (
+        HISTORY_TABLE = dbo.UserHistory
+    )
 );
 
 CREATE TABLE Patient (
@@ -174,16 +185,20 @@ CREATE TABLE Referral (
     ReferralId              INT IDENTITY(1,1) PRIMARY KEY,
     PatientId               INT NOT NULL,
     OriginFacilityId        INT NOT NULL,
-    DestinationFacilityId   INT NOT NULL,
-    CreatedByCoordinatorId  INT NOT NULL,
-    FromSpecialistId        INT NULL,
+    DestinationFacilityId   INT NULL,
+    CreatedByCoordinatorId  INT NULL,
+    FromSpecialistId        INT NOT NULL,
     SpecialtyRequestId      INT NOT NULL,
     UrgencyLevelId          INT NOT NULL,
     ReferralStatusId        INT NOT NULL,
     ReferralReason          VARCHAR(500) NOT NULL,
-    CreatedAt               DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
-    UpdatedAt               DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+    CreatedAt               DATETIME2(7) NULL,
+    UpdatedAt               DATETIME2(7) NULL,
     DiagnosisCode           VARCHAR(20) NULL,
+
+    ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+    ValidTo   DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+    PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo),
 
     CONSTRAINT FK_Referral_Patient
         FOREIGN KEY (PatientId)
@@ -216,6 +231,13 @@ CREATE TABLE Referral (
     CONSTRAINT FK_Referral_ReferralStatus
         FOREIGN KEY (ReferralStatusId)
         REFERENCES ReferralStatus(ReferralStatusId)
+)
+WITH
+(
+    SYSTEM_VERSIONING = ON
+    (
+        HISTORY_TABLE = dbo.ReferralHistory
+    )
 );
 
 CREATE TABLE ReferralAssignment (
@@ -253,6 +275,10 @@ CREATE TABLE Appointment (
     AppointmentTime         TIME(0) NOT NULL,
     AppointmentStatusId     INT NOT NULL,
 
+    ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+    ValidTo   DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+    PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo),
+
     CONSTRAINT FK_Appointment_Referral
         FOREIGN KEY (ReferralId)
         REFERENCES Referral(ReferralId),
@@ -268,6 +294,13 @@ CREATE TABLE Appointment (
     CONSTRAINT FK_Appointment_AppointmentStatus
         FOREIGN KEY (AppointmentStatusId)
         REFERENCES AppointmentStatus(AppointmentStatusId)
+)
+WITH
+(
+    SYSTEM_VERSIONING = ON
+    (
+        HISTORY_TABLE = dbo.AppointmentHistory
+    )
 );
 
 CREATE TABLE AuditLog (
