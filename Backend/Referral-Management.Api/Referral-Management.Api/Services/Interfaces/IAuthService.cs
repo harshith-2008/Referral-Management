@@ -1,5 +1,4 @@
-﻿using Referral_Management.Api.DTOs;
-using Referral_Management.Api.DTOs.Auth;
+﻿using Referral_Management.Api.DTOs.Auth;
 
 namespace Referral_Management.Api.Services.Interfaces;
 
@@ -7,6 +6,4 @@ public interface IAuthService
 {
     Task<RegisterResponseDTO> RegisterAsync(RegisterUserDTO dto);
     Task<LoginResponseDTO> LoginAsync(LoginDTO dto);
-
-    
 }
