@@ -10,7 +10,7 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public AppDbContext(DbContextOptions<DbContext> options)
+    public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
     }
@@ -53,6 +53,12 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<VwAppointmentDetail> VwAppointmentDetails { get; set; }
+
+    public virtual DbSet<VwCoordinatorRequestedReferral> VwCoordinatorRequestedReferrals { get; set; }
+
+    public virtual DbSet<VwSpecialistAssignedPatient> VwSpecialistAssignedPatients { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=localhost;Database=Referral-Management;Trusted_Connection=True;TrustServerCertificate=True");
@@ -61,7 +67,7 @@ public partial class AppDbContext : DbContext
     {
         modelBuilder.Entity<Admin>(entity =>
         {
-            entity.HasKey(e => e.AdminId).HasName("PK__Admin__719FE488AE72CCCF");
+            entity.HasKey(e => e.AdminId).HasName("PK__Admin__719FE48841AC8957");
 
             entity.ToTable("Admin");
 
@@ -73,9 +79,20 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Appointment>(entity =>
         {
-            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC21BD15C85");
+            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC2B14E1A90");
 
-            entity.ToTable("Appointment");
+            entity
+                .ToTable("Appointment")
+                .ToTable(tb => tb.IsTemporal(ttb =>
+                    {
+                        ttb.UseHistoryTable("AppointmentHistory", "dbo");
+                        ttb
+                            .HasPeriodStart("ValidFrom")
+                            .HasColumnName("ValidFrom");
+                        ttb
+                            .HasPeriodEnd("ValidTo")
+                            .HasColumnName("ValidTo");
+                    }));
 
             entity.Property(e => e.AppointmentTime).HasPrecision(0);
 
@@ -102,7 +119,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<AppointmentStatus>(entity =>
         {
-            entity.HasKey(e => e.AppointmentStatusId).HasName("PK__Appointm__A619B660DA285B71");
+            entity.HasKey(e => e.AppointmentStatusId).HasName("PK__Appointm__A619B6601A1B0C4C");
 
             entity.ToTable("AppointmentStatus");
 
@@ -113,7 +130,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.HasKey(e => e.AuditLogId).HasName("PK__AuditLog__EB5F6CBDF60A6BA6");
+            entity.HasKey(e => e.AuditLogId).HasName("PK__AuditLog__EB5F6CBD94C788C4");
 
             entity.ToTable("AuditLog");
 
@@ -137,7 +154,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Facility>(entity =>
         {
-            entity.HasKey(e => e.FacilityId).HasName("PK__Facility__5FB08A7487A31EA6");
+            entity.HasKey(e => e.FacilityId).HasName("PK__Facility__5FB08A742A3E2073");
 
             entity.ToTable("Facility");
 
@@ -168,7 +185,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<GlobalNetwork>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__GlobalNe__3214EC076383A91C");
+            entity.HasKey(e => e.Id).HasName("PK__GlobalNe__3214EC073DA2D8CE");
 
             entity.ToTable("GlobalNetwork");
 
@@ -179,7 +196,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Hospital>(entity =>
         {
-            entity.HasKey(e => e.HospitalId).HasName("PK__Hospital__38C2E5AF45D49CEC");
+            entity.HasKey(e => e.HospitalId).HasName("PK__Hospital__38C2E5AFC2390EF5");
 
             entity.ToTable("Hospital");
 
@@ -199,11 +216,11 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Patient>(entity =>
         {
-            entity.HasKey(e => e.PatientId).HasName("PK__Patient__970EC3664CF8367F");
+            entity.HasKey(e => e.PatientId).HasName("PK__Patient__970EC366A7C00568");
 
             entity.ToTable("Patient");
 
-            entity.HasIndex(e => e.Mrn, "UQ__Patient__C797E1BCD109ABB3").IsUnique();
+            entity.HasIndex(e => e.Mrn, "UQ__Patient__C797E1BCFABB0ADF").IsUnique();
 
             entity.Property(e => e.Gender)
                 .HasMaxLength(1)
@@ -236,31 +253,39 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Referral>(entity =>
         {
-            entity.HasKey(e => e.ReferralId).HasName("PK__Referral__A2C4A966CB113039");
+            entity.HasKey(e => e.ReferralId).HasName("PK__Referral__A2C4A9666E2BECE4");
 
-            entity.ToTable("Referral");
+            entity
+                .ToTable("Referral")
+                .ToTable(tb => tb.IsTemporal(ttb =>
+                    {
+                        ttb.UseHistoryTable("ReferralHistory", "dbo");
+                        ttb
+                            .HasPeriodStart("ValidFrom")
+                            .HasColumnName("ValidFrom");
+                        ttb
+                            .HasPeriodEnd("ValidTo")
+                            .HasColumnName("ValidTo");
+                    }));
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.DiagnosisCode)
                 .HasMaxLength(20)
                 .IsUnicode(false);
             entity.Property(e => e.ReferralReason)
                 .HasMaxLength(500)
                 .IsUnicode(false);
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
 
             entity.HasOne(d => d.CreatedByCoordinator).WithMany(p => p.Referrals)
                 .HasForeignKey(d => d.CreatedByCoordinatorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Referral_Coordinator");
 
             entity.HasOne(d => d.DestinationFacility).WithMany(p => p.ReferralDestinationFacilities)
                 .HasForeignKey(d => d.DestinationFacilityId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Referral_DestinationFacility");
 
             entity.HasOne(d => d.FromSpecialist).WithMany(p => p.Referrals)
                 .HasForeignKey(d => d.FromSpecialistId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Referral_FromSpecialist");
 
             entity.HasOne(d => d.OriginFacility).WithMany(p => p.ReferralOriginFacilities)
@@ -291,7 +316,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<ReferralAssignment>(entity =>
         {
-            entity.HasKey(e => e.ReferralAssignmentId).HasName("PK__Referral__CB0E6EB44D0593D0");
+            entity.HasKey(e => e.ReferralAssignmentId).HasName("PK__Referral__CB0E6EB4434F6A6A");
 
             entity.ToTable("ReferralAssignment");
 
@@ -322,7 +347,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<ReferralCoordinator>(entity =>
         {
-            entity.HasKey(e => e.ReferralCoordinatorId).HasName("PK__Referral__E8AC3BF8EDCA20A2");
+            entity.HasKey(e => e.ReferralCoordinatorId).HasName("PK__Referral__E8AC3BF889C263C2");
 
             entity.ToTable("ReferralCoordinator");
 
@@ -339,7 +364,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<ReferralStatus>(entity =>
         {
-            entity.HasKey(e => e.ReferralStatusId).HasName("PK__Referral__2B43ECB55C1119B7");
+            entity.HasKey(e => e.ReferralStatusId).HasName("PK__Referral__2B43ECB50DF40A6E");
 
             entity.ToTable("ReferralStatus");
 
@@ -350,7 +375,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1A57881FCE");
+            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1AFFEEFE46");
 
             entity.ToTable("Role");
 
@@ -361,7 +386,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<ShiftBlock>(entity =>
         {
-            entity.HasKey(e => e.ShiftBlockId).HasName("PK__ShiftBlo__82DDFDA0970F299A");
+            entity.HasKey(e => e.ShiftBlockId).HasName("PK__ShiftBlo__82DDFDA0ABAF7148");
 
             entity.ToTable("ShiftBlock");
 
@@ -371,7 +396,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Specialist>(entity =>
         {
-            entity.HasKey(e => e.SpecialistId).HasName("PK__Speciali__7092086EB5E7A854");
+            entity.HasKey(e => e.SpecialistId).HasName("PK__Speciali__7092086E77734F8A");
 
             entity.ToTable("Specialist");
 
@@ -394,7 +419,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<SpecialistSpeciality>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Speciali__3214EC07ED110C0F");
+            entity.HasKey(e => e.Id).HasName("PK__Speciali__3214EC070FB6AB5A");
 
             entity.HasIndex(e => new { e.SpecialistId, e.SpecialtyId }, "UQ_SpecialistSpecialty").IsUnique();
 
@@ -411,7 +436,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<Specialty>(entity =>
         {
-            entity.HasKey(e => e.SpecialtyId).HasName("PK__Specialt__D768F6A8B1716332");
+            entity.HasKey(e => e.SpecialtyId).HasName("PK__Specialt__D768F6A87E566C6F");
 
             entity.ToTable("Specialty");
 
@@ -425,7 +450,7 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<UrgencyLevel>(entity =>
         {
-            entity.HasKey(e => e.UrgencyLevelId).HasName("PK__UrgencyL__0CA733F95D6E77B7");
+            entity.HasKey(e => e.UrgencyLevelId).HasName("PK__UrgencyL__0CA733F96A5C242C");
 
             entity.ToTable("UrgencyLevel");
 
@@ -436,11 +461,22 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__User__1788CC4CE8D4A6F6");
+            entity.HasKey(e => e.UserId).HasName("PK__User__1788CC4C16B0C76E");
 
-            entity.ToTable("User");
+            entity
+                .ToTable("User")
+                .ToTable(tb => tb.IsTemporal(ttb =>
+                    {
+                        ttb.UseHistoryTable("UserHistory", "dbo");
+                        ttb
+                            .HasPeriodStart("ValidFrom")
+                            .HasColumnName("ValidFrom");
+                        ttb
+                            .HasPeriodEnd("ValidTo")
+                            .HasColumnName("ValidTo");
+                    }));
 
-            entity.HasIndex(e => e.Email, "UQ__User__A9D10534353BA289").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__User__A9D10534F470BC56").IsUnique();
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Email)
@@ -470,6 +506,86 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_User_Role");
+        });
+
+        modelBuilder.Entity<VwAppointmentDetail>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("vw_AppointmentDetails");
+
+            entity.Property(e => e.AppointmentStatus)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.AppointmentTime).HasPrecision(0);
+            entity.Property(e => e.Mrn)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.PatientName)
+                .HasMaxLength(201)
+                .IsUnicode(false);
+            entity.Property(e => e.ReferralReason)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.SpecialistName)
+                .HasMaxLength(201)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<VwCoordinatorRequestedReferral>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("vw_Coordinator_RequestedReferrals");
+
+            entity.Property(e => e.DestinationFacility)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.DiagnosisCode)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.OriginFacility)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.PatientName)
+                .HasMaxLength(201)
+                .IsUnicode(false);
+            entity.Property(e => e.Specialty)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Urgency)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<VwSpecialistAssignedPatient>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("vw_Specialist_AssignedPatients");
+
+            entity.Property(e => e.DiagnosisCode)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.Gender)
+                .HasMaxLength(1)
+                .IsUnicode(false)
+                .IsFixedLength();
+            entity.Property(e => e.Mrn)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.PatientName)
+                .HasMaxLength(201)
+                .IsUnicode(false);
+            entity.Property(e => e.Specialty)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.Urgency)
+                .HasMaxLength(50)
+                .IsUnicode(false);
         });
 
         OnModelCreatingPartial(modelBuilder);
