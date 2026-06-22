@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using Referral_Management.Api.Middleware;
 using Referral_Management.Api.Models;
 using Referral_Management.Api.Services;
+using Referral_Management.Api.Services.Implementations;
 using Referral_Management.Api.Services.Interfaces;
 using System.Text;
 
@@ -52,7 +53,7 @@ builder.Services.AddScoped<ISpecialistService, SpecialistService>();
 builder.Services.AddScoped<IReferralService, ReferralService>();
 
 builder.Services.AddScoped<IPatientService,PatientService>();
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAnalyticsService,AnalyticsService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 
 
