@@ -50,8 +50,6 @@ export interface CreateReferralRequestDTO {
 
   createdByCoordinatorId: number;
 
-  fromSpecialistId: number;
-
   specialtyRequestId: number;
 
   referralReason: string;
