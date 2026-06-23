@@ -19,47 +19,20 @@ public class ReferralController : ControllerBase
         _referralService = referralService;
     }
 
-    // ✅ GET: api/referral/requested/{coordinatorId}
-    [HttpGet("requested/{coordinatorId:int}")]
-    public async Task<IActionResult> GetRequestedReferrals(int coordinatorId)
+    [HttpGet("requested")]
+    public async Task<IActionResult> GetRequestedReferrals()
     {
-        // ✅ Validation: positive integer
-        if (coordinatorId <= 0)
-        {
-            return Ok(new ApiResponseDTO<object>
-            {
-                Success = false,
-                Message = "CoordinatorId must be a positive integer.",
-                Data = null
-            });
-        }
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
 
         var result = await _referralService
             .GetRequestedReferralsForCoordinator(coordinatorId);
 
-        // ✅ Coordinator not found
-        if (result == null)
-        {
-            return Ok(new ApiResponseDTO<object>
-            {
-                Success = false,
-                Message = $"Coordinator with id {coordinatorId} not found.",
-                Data = null
-            });
-        }
-
-        // ✅ No referrals
-        if (!result.Any())
-        {
-            return Ok(new ApiResponseDTO<List<ReferralDto>>
-            {
-                Success = true,
-                Message = "No requested referrals found for this coordinator.",
-                Data = result
-            });
-        }
-
-        // ✅ Success
         return Ok(new ApiResponseDTO<List<ReferralDto>>
         {
             Success = true,
@@ -68,7 +41,6 @@ public class ReferralController : ControllerBase
         });
     }
 
-    // ✅ GET: api/referral/details/{referralId}
     [HttpGet("details/{referralId:int}")]
     public async Task<IActionResult> GetReferralDetails(int referralId)
     {
