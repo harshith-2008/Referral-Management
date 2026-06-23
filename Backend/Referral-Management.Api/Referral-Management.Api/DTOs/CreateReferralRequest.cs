@@ -1,5 +1,6 @@
 ﻿public class CreateReferralRequest
 {
+    public int ReferralId { get; set; }
     public int PatientId { get; set; }
     public int OriginFacilityId { get; set; }
     public List<int> DestinationFacilityIds { get; set; } = new();  // multiple facilities

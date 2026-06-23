@@ -48,6 +48,7 @@ namespace Referral_Management.Api.Controllers
         public async Task<IActionResult> GetSchedule(
             DateOnly date)
         {
+            
             int specialistId =
                 int.Parse(User.FindFirst("SpecialistId")!.Value);
 

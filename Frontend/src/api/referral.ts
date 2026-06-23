@@ -30,5 +30,5 @@ export const getFacilitiesDropdown = (referralId: number) =>
 export const routeReferral = (data: CreateReferralRequestDTO) =>
   api.post<ApiResponseDTO<any>>("/referral/route", data);
 
-export const getSubmittedPendingReferrals = (coordinatorId: number) =>
-  api.get(`/referral/submitted/${coordinatorId}`);
+export const getSubmittedPendingReferrals = () =>
+  api.get(`/referral/submitted`);

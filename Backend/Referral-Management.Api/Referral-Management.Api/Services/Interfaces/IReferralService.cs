@@ -11,5 +11,8 @@ public interface IReferralService
     Task<IEnumerable<FacilityDto>> GetFacilitiesForReferralDropdownAsync(int referralId);
 
     Task<List<Referral>> RouteReferralAsync(CreateReferralRequest request);
-   
+
+    Task<List<ReferralDto>> GetSubmittedReferralsForCoordinator(int coordinatorId);
+
+
 }

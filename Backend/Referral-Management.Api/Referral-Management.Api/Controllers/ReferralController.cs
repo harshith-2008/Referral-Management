@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Referral_Management.Api.DTOs;
 using Referral_Management.Api.DTOs.Common;
 using Referral_Management.Api.Services.Interfaces;
+using System.Security.Claims;
 
 namespace Referral_Management.Api.Controllers;
 
@@ -145,14 +148,51 @@ public class ReferralController : ControllerBase
 
         return Ok(facilities);
     }
-    //End point for submitting Referrral request from Coordinator1->Coordinator2
+
+    [Authorize]
     [HttpPost("route")]
-    public async Task<IActionResult> RouteReferral([FromBody] CreateReferralRequest request)
+    public async Task<IActionResult> RouteReferral(
+        [FromBody] CreateReferralRequest request)
     {
-        var referrals = await _referralService.RouteReferralAsync(request);
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        Console.WriteLine($"Coordinator Claim: {coordinatorIdClaim}");
+
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
+
+        Console.WriteLine(request.CreatedByCoordinatorId);
+
+        request.CreatedByCoordinatorId = coordinatorId;
+
+        var referrals =
+            await _referralService.RouteReferralAsync(request);
+
         return Ok(referrals);
     }
 
-    
+    [HttpGet("submitted")]
+    public async Task<IActionResult> GetSubmittedReferrals()
+    {
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
 
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
+
+        var result = await _referralService
+            .GetSubmittedReferralsForCoordinator(coordinatorId);
+
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Submitted referrals fetched successfully.",
+            Data = result
+        });
+    }
 }
