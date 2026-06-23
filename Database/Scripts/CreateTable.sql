@@ -97,7 +97,6 @@ WITH
         HISTORY_TABLE = dbo.UserHistory
     )
 );
-
 CREATE TABLE Patient (
     PatientId               INT IDENTITY(1,1) PRIMARY KEY,
     Mrn                     VARCHAR(50) NOT NULL UNIQUE,
