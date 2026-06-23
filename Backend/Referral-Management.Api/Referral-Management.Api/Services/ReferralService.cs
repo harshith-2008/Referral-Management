@@ -16,45 +16,10 @@ public class ReferralService : IReferralService
 
     public async Task<List<ReferralDto>> GetRequestedReferralsForCoordinator(int referralCoordinatorId)
     {
-        var coordinator = await _context.ReferralCoordinators
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.ReferralCoordinatorId == referralCoordinatorId);
-
-        if (coordinator == null)
-            return new List<ReferralDto>();
-
-        var facilityId = coordinator.FacilityId;
-
-        var referrals = await _context.Referrals
-            .AsNoTracking()
-            .Include(r => r.Patient)
-                .ThenInclude(p => p.User)
-            .Include(r => r.OriginFacility)
-            .Include(r => r.DestinationFacility)
-            .Include(r => r.ReferralStatus)
-            .Include(r => r.SpecialtyRequest)
-            .Include(r => r.UrgencyLevel)
-            .Where(r =>
-                r.DestinationFacilityId == facilityId &&
-                r.ReferralStatus.StatusName == "Requested"
-            )
-            .Select(r => new ReferralDto
-            {
-                ReferralId = r.ReferralId,
-                PatientName =
-                    r.Patient.User.FirstName + " " +
-                    r.Patient.User.LastName,
-                OriginFacility = r.OriginFacility.FacilityName,
-                DestinationFacility = r.DestinationFacility.FacilityName,
-                Status = r.ReferralStatus.StatusName,
-                Urgency = r.UrgencyLevel.LevelName,
-                Specialty = r.SpecialtyRequest.SpecialtyName,
-                DiagnosisCode = r.DiagnosisCode,
-                CreatedAt = System.DateTime.UtcNow
-            })
-            .ToListAsync();
-
-        return referrals;
+        return await _context.Set<ReferralDto>()
+       .FromSqlInterpolated(
+           $"EXEC GetRequestedReferralsForCoordinator {referralCoordinatorId}")
+       .ToListAsync();
     }
 
     public async Task<ReferralDetailDto?> GetReferralDetailsById(int referralId)

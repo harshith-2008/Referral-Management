@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Referral_Management.Api.DTOs;
 
 namespace Referral_Management.Api.Models;
 
@@ -65,6 +66,9 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ReferralDto>()
+       .HasNoKey();
+
         modelBuilder.Entity<Admin>(entity =>
         {
             entity.HasKey(e => e.AdminId).HasName("PK__Admin__719FE48841AC8957");

@@ -31,8 +31,11 @@ public class ReferralController : ControllerBase
             });
         }
 
-        var result = await _referralService
+        var result =
+        await _referralService
             .GetRequestedReferralsForCoordinator(coordinatorId);
+
+       
 
         // ✅ Coordinator not found
         if (result == null)
@@ -63,6 +66,7 @@ public class ReferralController : ControllerBase
             Message = "Requested referrals fetched successfully.",
             Data = result
         });
+        
     }
 
     // ✅ GET: api/referral/details/{referralId}
