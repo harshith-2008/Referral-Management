@@ -11,17 +11,11 @@ import type { ApiResponseDTO } from "../types/common";
 
 export const getAssignedPatients = (specialistId: number) =>
   api.get<ApiResponseDTO<SpecialistPatientDTO[]>>(
-    `/specialist/assigned-patients/${specialistId}`
+    `/specialist/assigned-patients/${specialistId}`,
   );
 
-export const createReferralIntake = (
-  specialistId: number,
-  data: ReferralIntakeCreateDTO
-) =>
-  api.post<ApiResponseDTO<number>>(
-    `/specialist/referral-intake/${specialistId}`,
-    data
-  );
+export const createReferralIntake = (data: ReferralIntakeCreateDTO) =>
+  api.post<ApiResponseDTO<number>>(`/specialist/referral-intake`, data);
 
 export const getUrgencyLevels = () =>
   api.get<GetUrgencyLevelDTO[]>("/specialist/urgencyLevels");

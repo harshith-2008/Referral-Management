@@ -95,9 +95,9 @@ namespace Referral_Management.Api.Controllers
         [HttpGet("user")]
         public async Task<IActionResult> GetUserAppointments()
         {
-            int userId =
-                int.Parse(User.FindFirst("UserId")!.Value);
-
+            int userId = int.Parse(
+    User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value
+);
             var result = await _appointmentService
                 .GetUserAppointmentsAsync(userId);
 

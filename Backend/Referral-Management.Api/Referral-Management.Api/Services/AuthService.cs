@@ -135,7 +135,7 @@ public class AuthService : IAuthService
             throw new UnauthorizedException("Invalid email or password.");
         }
 
-        var token = GenerateJwtToken(user);
+        var token = await GenerateJwtToken(user);
 
         return new LoginResponseDTO
         {
@@ -146,29 +146,101 @@ public class AuthService : IAuthService
         };
     }
 
-    private string GenerateJwtToken(User user)
+    private async Task<string> GenerateJwtToken(User user)
     {
         var key = _configuration["Jwt:Key"];
 
-        var claims = new List<Claim>{
-            new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role,user.Role.RoleName),
+            new Claim(ClaimTypes.Role, user.Role.RoleName),
+            new Claim("UserId", user.UserId.ToString()),
             new Claim("FacilityId", user.FacilityId.ToString())
         };
 
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!));
+        switch (user.RoleId)
+        {
+            case 1: // Admin
+                {
+                    var admin = await _context.Admins
+                        .FirstOrDefaultAsync(a => a.UserId == user.UserId);
 
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+                    if (admin != null)
+                    {
+                        claims.Add(
+                            new Claim("AdminId", admin.AdminId.ToString()));
+                    }
+
+                    break;
+                }
+
+            case 2: // Coordinator
+                {
+                    var coordinator = await _context.ReferralCoordinators
+                        .FirstOrDefaultAsync(c => c.UserId == user.UserId);
+
+                    if (coordinator != null)
+                    {
+                        claims.Add(
+                            new Claim("ReferralCoordinatorId",
+                                coordinator.ReferralCoordinatorId.ToString()));
+                    }
+
+                    break;
+                }
+
+            case 3: // Patient
+                {
+                    var patient = await _context.Patients
+                        .FirstOrDefaultAsync(p => p.UserId == user.UserId);
+
+                    if (patient != null)
+                    {
+                        claims.Add(
+                            new Claim("PatientId",
+                                patient.PatientId.ToString()));
+                    }
+
+                    break;
+                }
+
+            case 4: // Specialist
+                {
+                    var specialist = await _context.Specialists
+                        .FirstOrDefaultAsync(s => s.UserId == user.UserId);
+
+                    if (specialist != null)
+                    {
+                        claims.Add(
+                            new Claim("SpecialistId",
+                                specialist.SpecialistId.ToString()));
+                    }
+
+                    break;
+                }
+        }
+
+        var securityKey =
+            new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key!));
+
+        var credentials =
+            new SigningCredentials(
+                securityKey,
+                SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration["Jwt:ExpiryMinutes"])),
-                signingCredentials: credentials);
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(
+                Convert.ToInt32(
+                    _configuration["Jwt:ExpiryMinutes"])),
+            signingCredentials: credentials);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return new JwtSecurityTokenHandler()
+            .WriteToken(token);
     }
 
     private async Task CreateAdminAsync(int userId)

@@ -1,32 +1,54 @@
 import api from "./axios";
 
-import type { UpdatePatientProfileDTO } from "../types/patient";
+import type { ApiResponseDTO } from "../types/common";
+
+import type {
+  PatientLookupDTO,
+  UpdatePatientProfileDTO,
+  PatientDashboardDTO,
+  PatientProfileDTO,
+  ReferralDTO,
+  ReferralDetailsDTO,
+  ReferralStatusDTO,
+  AppointmentDTO,
+  AppointmentDetailsDTO,
+} from "../types/patient";
 
 export const getPatientByMrn = (mrn: string) =>
-  api.get(`/patient/lookup/${mrn}`);
+  api.get<ApiResponseDTO<PatientLookupDTO>>(`/patient/lookup/${mrn}`);
 
-export const getDashboard = () => api.get("/patient/dashboard");
+export const getDashboard = () =>
+  api.get<ApiResponseDTO<PatientDashboardDTO>>("/patient/dashboard");
 
-export const getProfile = () => api.get("/patient/profile");
+export const getProfile = () =>
+  api.get<ApiResponseDTO<PatientProfileDTO>>("/patient/profile");
 
 export const updateProfile = (data: UpdatePatientProfileDTO) =>
-  api.put("/patient/profile", data);
+  api.put<ApiResponseDTO<boolean>>("/patient/profile", data);
 
-export const getReferrals = () => api.get("/patient/referrals");
+export const getReferrals = () =>
+  api.get<ApiResponseDTO<ReferralDTO[]>>("/patient/referrals");
 
 export const getReferral = (referralId: number) =>
-  api.get(`/patient/referrals/${referralId}`);
+  api.get<ApiResponseDTO<ReferralDetailsDTO>>(
+    `/patient/referrals/${referralId}`,
+  );
 
 export const getReferralStatus = (referralId: number) =>
-  api.get(`/patient/referrals/${referralId}/status`);
+  api.get<ApiResponseDTO<ReferralStatusDTO>>(
+    `/patient/referrals/${referralId}/status`,
+  );
 
-export const getAppointments = () => api.get("/patient/appointments");
+export const getAppointments = () =>
+  api.get<ApiResponseDTO<AppointmentDTO[]>>("/patient/appointments");
 
 export const getUpcomingAppointments = () =>
-  api.get("/patient/appointments/upcoming");
+  api.get<ApiResponseDTO<AppointmentDTO[]>>("/patient/appointments/upcoming");
 
 export const getAppointmentHistory = () =>
-  api.get("/patient/appointments/history");
+  api.get<ApiResponseDTO<AppointmentDTO[]>>("/patient/appointments/history");
 
 export const getAppointment = (appointmentId: number) =>
-  api.get(`/patient/appointments/${appointmentId}`);
+  api.get<ApiResponseDTO<AppointmentDetailsDTO>>(
+    `/patient/appointments/${appointmentId}`,
+  );

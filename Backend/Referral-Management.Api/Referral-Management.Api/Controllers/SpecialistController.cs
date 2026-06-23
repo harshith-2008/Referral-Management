@@ -3,6 +3,7 @@ using Referral_Management.Api.DTOs;
 using Referral_Management.Api.DTOs.Common;
 using Referral_Management.Api.Services;
 using Referral_Management.Api.Services.Interfaces;
+using System.Security.Claims;
 
 namespace Referral_Management.Api.Controllers;
 
@@ -50,20 +51,19 @@ public class SpecialistController : ControllerBase
             Data = result
         });
     }
-    [HttpPost("referral-intake/{specialistId:int}")]
+
+    [HttpPost("referral-intake")]
     public async Task<IActionResult> CreateReferralIntake(
-    int specialistId,
     [FromBody] ReferralIntakeCreateDto dto)
     {
-        if (specialistId <= 0)
-        {
-            return Ok(new ApiResponseDTO<object>
-            {
-                Success = false,
-                Message = "Invalid specialist id",
-                Data = null
-            });
-        }
+        var specialistIdClaim = User.FindFirst("SpecialistId")?.Value;
+
+        if (string.IsNullOrEmpty(specialistIdClaim))
+            return Unauthorized();
+
+        var specialistId = int.Parse(specialistIdClaim);
+
+        Console.WriteLine("specilaist id in controller", specialistId);
 
         var referralId = await _specialistService
             .CreateDraftReferral(specialistId, dto);
@@ -75,6 +75,7 @@ public class SpecialistController : ControllerBase
             Data = referralId
         });
     }
+
     //Endpoint for getting all the urgencylevels for dropdown
     [HttpGet("urgencyLevels")]
     public async Task<IActionResult> GetUrgencies()

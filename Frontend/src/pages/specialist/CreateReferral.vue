@@ -1,21 +1,21 @@
 ```vue
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import type { ApiResponseDTO } from "../../types/common";
 
+import { getErrorMessage } from "../../utils/errorHandler";
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import { specialistNavLinks } from "../../config/navigation";
 
-import api from "../../api/axios";
 import type {
   GetSpecialityDTO,
   GetUrgencyLevelDTO,
   ReferralIntakeCreateDTO,
 } from "../../types/specialist.ts";
 import type { PatientLookupDTO } from "../../types/patient";
-
-// TODO: Replace with logged in specialist id
-const specialistId = 1;
+import { getUrgencyLevels } from "../../api/specialist.ts";
+import { getSpecialities } from "../../api/specialist.ts";
+import { getPatientByMrn } from "../../api/patient.ts";
+import { createReferralIntake } from "../../api/specialist.ts";
 
 const user = ref({
   name: "Dr. James Rivera",
@@ -44,59 +44,29 @@ const form = reactive<ReferralIntakeCreateDTO>({
 
 const loadUrgencies = async () => {
   try {
-    const response = await api.get<GetUrgencyLevelDTO[]>(
-      "/specialist/urgencyLevels"
-    );
+    const response = await getUrgencyLevels();
 
     urgencyLevels.value = response.data;
   } catch (error) {
     console.error("Failed to load urgency levels:", error);
 
-    urgencyLevels.value = [
-      {
-        urgencyLevelId: 1,
-        levelName: "Routine",
-      },
-      {
-        urgencyLevelId: 2,
-        levelName: "Urgent",
-      },
-      {
-        urgencyLevelId: 3,
-        levelName: "Emergency",
-      },
-    ];
+    urgencyLevels.value = [];
+
+    alert(getErrorMessage(error));
   }
 };
 
 const loadSpecialities = async () => {
   try {
-    const response = await api.get<GetSpecialityDTO[]>(
-      "/specialist/specialities"
-    );
+    const response = await getSpecialities();
 
     specialities.value = response.data;
   } catch (error) {
     console.error("Failed to load specialities:", error);
 
-    specialities.value = [
-      {
-        specialityId: 1,
-        specialityName: "Cardiology",
-      },
-      {
-        specialityId: 2,
-        specialityName: "Neurology",
-      },
-      {
-        specialityId: 3,
-        specialityName: "Orthopedics",
-      },
-      {
-        specialityId: 4,
-        specialityName: "Dermatology",
-      },
-    ];
+    specialities.value = [];
+
+    alert(getErrorMessage(error));
   }
 };
 
@@ -109,9 +79,7 @@ const searchPatient = async () => {
   searching.value = true;
 
   try {
-    const response = await api.get<ApiResponseDTO<PatientLookupDTO>>(
-      `/patient/lookup/${mrn.value}`
-    );
+    const response = await getPatientByMrn(mrn.value);
 
     patient.value = response.data.data;
 
@@ -119,17 +87,11 @@ const searchPatient = async () => {
   } catch (error) {
     console.error("Patient lookup failed:", error);
 
-    // fallback mock data
-    patient.value = {
-      patientId: 1001,
-      mrn: mrn.value,
-      fullName: "John Smith",
-      dob: "1988-06-10",
-      gender: "Male",
-      facilityName: "Cardiology Department",
-    };
+    patient.value = null;
+    form.patientId = 0;
+    console.log(error);
 
-    form.patientId = patient.value.patientId;
+    alert(getErrorMessage(error));
   } finally {
     searching.value = false;
   }
@@ -153,10 +115,8 @@ const createReferral = async () => {
   submitting.value = true;
 
   try {
-    const response = await api.post<ApiResponseDTO<number>>(
-      `/specialist/referral-intake/${specialistId}`,
-      form
-    );
+    const response = await createReferralIntake(form);
+
     console.log("Referral Id:", response.data.data);
     console.log("Message:", response.data.message);
     console.log("Referral created:", response.data);
@@ -171,7 +131,7 @@ const createReferral = async () => {
   } catch (error) {
     console.error("Referral creation failed:", error);
 
-    alert("Referral creation failed.");
+    alert(getErrorMessage(error));
   } finally {
     submitting.value = false;
   }

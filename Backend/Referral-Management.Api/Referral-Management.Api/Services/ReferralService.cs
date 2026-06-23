@@ -50,7 +50,7 @@ public class ReferralService : IReferralService
                 Urgency = r.UrgencyLevel.LevelName,
                 Specialty = r.SpecialtyRequest.SpecialtyName,
                 DiagnosisCode = r.DiagnosisCode,
-                CreatedAt = r.CreatedAt
+                //CreatedAt = r.CreatedAt
             })
             .ToListAsync();
 
@@ -98,7 +98,7 @@ public class ReferralService : IReferralService
             Urgency = referral.UrgencyLevel.LevelName,
             Specialty = referral.SpecialtyRequest.SpecialtyName,
             DiagnosisCode = referral.DiagnosisCode,
-            CreatedAt = referral.CreatedAt,
+            //CreatedAt = referral.CreatedAt,
 
             // 🔹 Patient
             PatientName =
