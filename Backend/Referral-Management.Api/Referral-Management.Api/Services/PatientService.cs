@@ -14,27 +14,6 @@ namespace Referral_Management.Api.Services
             _context = context;
         }
 
-        public async Task<PatientReferralLookupDto> GetPatientForReferralAsync(string mrn)
-        {
-            var patient = await _context.Patients
-                .Include(p => p.User)
-                .Include(p => p.PrimaryFacility)
-                .FirstOrDefaultAsync(p => p.Mrn == mrn);
-
-            if (patient == null)
-                throw new NotFoundException("Patient not found.");
-
-            return new PatientReferralLookupDto
-            {
-                PatientId = patient.PatientId,
-                Mrn = patient.Mrn,
-                FullName = $"{patient.User.FirstName} {patient.User.LastName}",
-                Dob = patient.Dob,
-                Gender = patient.Gender,
-                FacilityName = patient.PrimaryFacility.FacilityName
-            };
-        }
-
         //==========================================================
         // Helper
         //==========================================================
@@ -148,7 +127,7 @@ namespace Referral_Management.Api.Services
                         Urgency = r.UrgencyLevel.LevelName,
                         OriginFacility = r.OriginFacility.FacilityName,
                         DestinationFacility = r.DestinationFacility.FacilityName,
-                        //CreatedAt = r.CreatedAt
+                        CreatedAt = System.DateTime.UtcNow
                     }).ToList()
             };
         }
@@ -175,7 +154,7 @@ namespace Referral_Management.Api.Services
                     Urgency = r.UrgencyLevel.LevelName,
                     OriginFacility = r.OriginFacility.FacilityName,
                     DestinationFacility = r.DestinationFacility.FacilityName,
-                    //CreatedAt = r.CreatedAt
+                    CreatedAt = System.DateTime.UtcNow
                 })
                 .ToListAsync();
         }
@@ -206,7 +185,7 @@ namespace Referral_Management.Api.Services
                 Urgency = r.UrgencyLevel.LevelName,
                 OriginFacility = r.OriginFacility.FacilityName,
                 DestinationFacility = r.DestinationFacility.FacilityName,
-                //CreatedAt = r.CreatedAt
+                CreatedAt = System.DateTime.UtcNow
             };
         }
 
@@ -226,7 +205,7 @@ namespace Referral_Management.Api.Services
             {
                 ReferralId = r.ReferralId,
                 ReferralStatus = r.ReferralStatus.StatusName,
-                //LastUpdated = r.UpdatedAt
+                LastUpdated = System.DateTime.UtcNow
             };
         }
 
