@@ -21,11 +21,15 @@ const handleLogin = async () => {
       password: password.value,
     });
 
-    localStorage.setItem("token", response.data.token);
-    console.log(response.data.token);
-    localStorage.setItem("roleId", response.data.roleId.toString());
+    console.log(response.data.data);
+    console.log(response.data.data.roleId);
+    console.log(typeof response.data.data.roleId);
 
-    switch (response.data.roleId) {
+    localStorage.setItem("token", response.data.data.token);
+    console.log(response.data.data.token);
+    localStorage.setItem("roleId", response.data.data.roleId.toString());
+
+    switch (response.data.data.roleId) {
       case 1:
         router.push("/admin");
         break;
@@ -53,32 +57,37 @@ const handleLogin = async () => {
   }
 };
 </script>
-
 <template>
-  <div class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Referral Manager</h1>
+  <div class="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div
+      class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+    >
+      <!-- Header -->
+      <div class="mb-8 text-center">
+        <h1 class="text-3xl font-bold text-slate-900">Referral Manager</h1>
 
-        <p class="text-gray-500 mt-2">Referral Management System</p>
+        <p class="mt-2 text-sm text-slate-500">
+          Sign in to continue to your dashboard
+        </p>
       </div>
 
+      <!-- Form -->
       <form @submit.prevent="handleLogin" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Email
+          <label class="mb-2 block text-sm font-medium text-slate-700">
+            Email Address
           </label>
 
           <input
             v-model="email"
             type="email"
             placeholder="Enter your email"
-            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
           />
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="mb-2 block text-sm font-medium text-slate-700">
             Password
           </label>
 
@@ -86,18 +95,21 @@ const handleLogin = async () => {
             v-model="password"
             type="password"
             placeholder="Enter your password"
-            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
           />
         </div>
 
-        <div v-if="errorMessage" class="text-sm text-red-600">
+        <div
+          v-if="errorMessage"
+          class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+        >
           {{ errorMessage }}
         </div>
 
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {{ loading ? "Signing In..." : "Sign In" }}
         </button>

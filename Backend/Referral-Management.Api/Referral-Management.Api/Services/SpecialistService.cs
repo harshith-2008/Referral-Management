@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Referral_Management.Api.DTOs;
+using Referral_Management.Api.Exceptions;
 using Referral_Management.Api.Models;
 using Referral_Management.Api.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Referral_Management.Api.Services;
 
@@ -76,16 +78,24 @@ public class SpecialistService : ISpecialistService
 
         return result;
     }
+
     public async Task<int> CreateDraftReferral(
-    int specialistId,
-    ReferralIntakeCreateDto dto)
+        int specialistId,
+        ReferralIntakeCreateDto dto)
     {
-        // ✅ HARD-CODED VALUES (TEMPORARY)
-        int draftStatusId = 1; // <-- ReferralStatusId for "Draft"
+        var patient = await _context.Patients
+            .FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
+
+        if (patient == null)
+            throw new NotFoundException("Patient not found");
+
+        var requestedStatusId = await _context.ReferralStatuses
+            .Where(rs => rs.StatusName == "Submitted")
+            .Select(rs => rs.ReferralStatusId)
+            .FirstAsync();
 
         var referral = new Referral
         {
-            // ✅ Specialist-entered fields
             PatientId = dto.PatientId,
             FromSpecialistId = specialistId,
             ReferralReason = dto.ReferralReason,
@@ -93,22 +103,20 @@ public class SpecialistService : ISpecialistService
             UrgencyLevelId = dto.UrgencyLevelId,
             SpecialtyRequestId = dto.SpecialtyRequestId,
 
-            // ✅ Coordinator fields (HARDCODED / NULL for now)
-            OriginFacilityId = 1,
-            DestinationFacilityId = 2,
-            CreatedByCoordinatorId = 1,
-            
+            // Derived from patient
+            OriginFacilityId = patient.PrimaryFacilityId,
 
-            // ✅ Status & audit
-            ReferralStatusId = draftStatusId,
+            // Status
+            ReferralStatusId = requestedStatusId,
+
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _context.Referrals.Add(referral);
-        await _context.SaveChangesAsync();
+            _context.Referrals.Add(referral);
+            await _context.SaveChangesAsync();
 
-        return referral.ReferralId;
+            return referral.ReferralId;
     }
     public async Task<IEnumerable<GetUrgencyLevelsDto>> GetAllUrgenciesAsync()
     {

@@ -10,7 +10,7 @@ namespace Referral_Management.Api.Controllers
 {
     [ApiController]
     [Route("api/patient")]
-    [Authorize(Roles = "Patient")]
+
     public class PatientController : ControllerBase
     {
         private readonly IPatientService _patientService;
@@ -18,6 +18,19 @@ namespace Referral_Management.Api.Controllers
         public PatientController(IPatientService patientService)
         {
             _patientService = patientService;
+        }
+
+        [HttpGet("lookup/{mrn}")]
+        public async Task<IActionResult> GetPatientForReferral(string mrn)
+        {
+            var result = await _patientService.GetPatientForReferralAsync(mrn);
+
+            return Ok(new ApiResponseDTO<PatientReferralLookupDto>
+            {
+                Success = true,
+                Message = "Patient found",
+                Data = result
+            });
         }
 
         private int GetUserId()
