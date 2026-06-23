@@ -10,6 +10,8 @@ import AssignedReferrals from "../pages/specialist/AssignedReferrals.vue";
 import CreateReferral from "../pages/specialist/CreateReferral.vue";
 import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 import Unauthorized from "../pages/auth/Unauthorized.vue";
+import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
+import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -100,6 +102,22 @@ const router = createRouter({
     {
       path: "/specialist/profile",
       component: ProfileSettingsPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["4"],
+      },
+    },
+    {
+      path: "/coordinator/incoming-requests",
+      component: IncomingRequests,
+      meta: {
+        requiresAuth: true,
+        roles: ["4"],
+      },
+    },
+    {
+      path: "/coordinator/routing-pending",
+      component: RoutingPending,
       meta: {
         requiresAuth: true,
         roles: ["4"],

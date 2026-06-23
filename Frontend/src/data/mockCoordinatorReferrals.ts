@@ -21,13 +21,15 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
       {
         status: "Submitted",
         title: "Referral submitted",
-        description: "Dr. Alan Peters created the referral for Margaret Thompson.",
+        description:
+          "Dr. Alan Peters created the referral for Margaret Thompson.",
         timestamp: "2024-06-10 09:15 AM",
       },
       {
         status: "Requested",
         title: "Sent to destination hospital",
-        description: "Referral forwarded to City Medical Center — Cardiology Unit for review.",
+        description:
+          "Referral forwarded to City Medical Center — Cardiology Unit for review.",
         timestamp: "2024-06-10 11:30 AM",
       },
     ],
@@ -46,7 +48,8 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
     originSpecialist: "Dr. Maria Santos (Orthopedics)",
     destinationHospital: "Metro Health — Orthopedics Wing",
     primaryDiagnosis: "Rotator Cuff Tear (M75.10)",
-    referralReason: "Persistent shoulder pain unresponsive to physical therapy.",
+    referralReason:
+      "Persistent shoulder pain unresponsive to physical therapy.",
     history: [
       {
         status: "Submitted",
@@ -63,13 +66,15 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
       {
         status: "Accepted",
         title: "Referral accepted",
-        description: "Metro Health accepted the referral and assigned docket DKT-8821.",
+        description:
+          "Metro Health accepted the referral and assigned docket DKT-8821.",
         timestamp: "2024-06-07 09:45 AM",
       },
       {
         status: "Scheduled",
         title: "Appointment scheduled",
-        description: "Consultation scheduled with Dr. Lisa Wong on June 18, 2024.",
+        description:
+          "Consultation scheduled with Dr. Lisa Wong on June 18, 2024.",
         timestamp: "2024-06-09 03:20 PM",
       },
     ],
@@ -88,12 +93,14 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
     originSpecialist: "Dr. James Rivera (Cardiology)",
     destinationHospital: "Pending assignment",
     primaryDiagnosis: "Acute Coronary Syndrome (I24.9)",
-    referralReason: "Emergency referral requiring immediate routing to nearest cardiac unit.",
+    referralReason:
+      "Emergency referral requiring immediate routing to nearest cardiac unit.",
     history: [
       {
         status: "Submitted",
         title: "Referral submitted",
-        description: "Dr. James Rivera created an emergency referral for Elena Martinez.",
+        description:
+          "Dr. James Rivera created an emergency referral for Elena Martinez.",
         timestamp: "2024-06-11 08:05 AM",
       },
     ],
@@ -213,7 +220,8 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
       {
         status: "Rejected",
         title: "Referral rejected",
-        description: "Neurology Center declined — incomplete imaging reports attached.",
+        description:
+          "Neurology Center declined — incomplete imaging reports attached.",
         timestamp: "2024-06-07 03:00 PM",
       },
     ],
@@ -232,7 +240,8 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
     originSpecialist: "Dr. Maria Santos (Orthopedics)",
     destinationHospital: "City Medical Center — Cardiology Unit",
     primaryDiagnosis: "Hypertension (I10)",
-    referralReason: "Elevated blood pressure requiring cardiac clearance before surgery.",
+    referralReason:
+      "Elevated blood pressure requiring cardiac clearance before surgery.",
     history: [
       {
         status: "Submitted",
@@ -243,13 +252,15 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
       {
         status: "Requested",
         title: "Sent to destination hospital",
-        description: "Referral forwarded to City Medical Center — Cardiology Unit.",
+        description:
+          "Referral forwarded to City Medical Center — Cardiology Unit.",
         timestamp: "2024-06-02 09:00 AM",
       },
       {
         status: "Cancelled",
         title: "Referral cancelled",
-        description: "Patient cancelled elective surgery. Referral no longer required.",
+        description:
+          "Patient cancelled elective surgery. Referral no longer required.",
         timestamp: "2024-06-06 11:30 AM",
       },
     ],
@@ -268,7 +279,8 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
     originSpecialist: "Dr. Tom Reed (Gastroenterology)",
     destinationHospital: "Pending assignment",
     primaryDiagnosis: "Heart Failure (I50.9)",
-    referralReason: "Worsening dyspnea requiring cardiac evaluation before GI procedure.",
+    referralReason:
+      "Worsening dyspnea requiring cardiac evaluation before GI procedure.",
     history: [
       {
         status: "Submitted",

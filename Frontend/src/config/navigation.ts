@@ -2,14 +2,32 @@ import type { NavLink } from "../types/navigation";
 
 export const specialistNavLinks: NavLink[] = [
   { label: "Dashboard", path: "/specialist", icon: "dashboard" },
-  { label: "Create Referral", path: "/specialist/create-referral", icon: "create" },
-  { label: "Assigned Referrals", path: "/specialist/referrals", icon: "referrals" },
+  {
+    label: "Create Referral",
+    path: "/specialist/create-referral",
+    icon: "create",
+  },
+  {
+    label: "Assigned Referrals",
+    path: "/specialist/referrals",
+    icon: "referrals",
+  },
   { label: "Profile", path: "/specialist/profile", icon: "profile" },
 ];
 
 export const coordinatorNavLinks: NavLink[] = [
   { label: "Dashboard", path: "/coordinator", icon: "dashboard" },
   { label: "Referral List", path: "/coordinator/referrals", icon: "referrals" },
+  {
+    label: "Routing Pending",
+    path: "/coordinator/routing-pending",
+    icon: "referrals",
+  },
+  {
+    label: "Incoming Requests",
+    path: "/coordinator/incoming-requests",
+    icon: "referrals",
+  },
   { label: "Profile", path: "/coordinator/profile", icon: "profile" },
 ];
 

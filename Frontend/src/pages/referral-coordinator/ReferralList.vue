@@ -39,6 +39,7 @@ const closeView = () => {
       show-filters
       show-summary
       show-actions
+      action-label="View"
       @view="openView"
     />
 
