@@ -167,4 +167,50 @@ public class ReferralController : ControllerBase
             Data = result
         });
     }
+
+    [HttpGet("origin-facility")]
+    public async Task<IActionResult> GetOriginFacilityReferrals()
+    {
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
+
+        var result = await _referralService
+            .GetOriginFacilityReferralsForCoordinator(coordinatorId);
+
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Origin facility referrals fetched successfully.",
+            Data = result
+        });
+    }
+
+    [HttpGet("my-referrals")]
+    [Authorize(Roles = "Specialist")]
+    public async Task<IActionResult> GetMyReferrals()
+    {
+        var specialistIdClaim =
+            User.FindFirst("SpecialistId")?.Value;
+
+        if (string.IsNullOrEmpty(specialistIdClaim))
+            return Unauthorized();
+
+        var specialistId = int.Parse(specialistIdClaim);
+
+        var result =
+            await _referralService
+                .GetReferralsRaisedBySpecialistAsync(specialistId);
+
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Referrals retrieved successfully.",
+            Data = result
+        });
+    }
 }

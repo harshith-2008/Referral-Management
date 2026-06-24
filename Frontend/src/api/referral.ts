@@ -30,3 +30,8 @@ export const routeReferral = (data: CreateReferralRequestDTO) =>
 
 export const getSubmittedPendingReferrals = () =>
   api.get(`/referral/submitted`);
+
+export const getOriginFacilityReferrals = () =>
+  api.get<ApiResponseDTO<ReferralDTO[]>>("/referral/origin-facility");
+
+export const getMyReferrals = () => api.get("/referral/my-referrals");

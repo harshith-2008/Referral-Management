@@ -48,9 +48,17 @@ namespace Referral_Management.Api.Controllers
         public async Task<IActionResult> GetSchedule(
             DateOnly date)
         {
-            
-            int specialistId =
-                int.Parse(User.FindFirst("SpecialistId")!.Value);
+            var specialistIdClaim = User.FindFirst("SpecialistId")?.Value;
+
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"{claim.Type} = {claim.Value}");
+            }
+
+            if (string.IsNullOrEmpty(specialistIdClaim))
+                return Unauthorized();
+
+            var specialistId = int.Parse(specialistIdClaim);
 
             var result = await _appointmentService
                 .GetScheduleAsync(specialistId, date);
@@ -67,8 +75,16 @@ namespace Referral_Management.Api.Controllers
         public async Task<IActionResult> CreateAppointment(
             [FromBody] CreateAppointmentDTO request)
         {
+            var coordinatorIdClaim =
+                User.FindFirst("ReferralCoordinatorId")?.Value;
+
+            if (string.IsNullOrEmpty(coordinatorIdClaim))
+                return Unauthorized();
+
+            int coordinatorId = int.Parse(coordinatorIdClaim);
+
             var result = await _appointmentService
-                .CreateAppointmentAsync(request);
+                .CreateAppointmentAsync(request, coordinatorId);
 
             return Ok(new ApiResponseDTO<AppointmentResponseDTO>
             {

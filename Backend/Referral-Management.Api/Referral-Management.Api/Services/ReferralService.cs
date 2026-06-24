@@ -356,4 +356,106 @@ public class ReferralService : IReferralService
             .ToListAsync();
     }
 
+    public async Task<List<ReferralDto>>
+    GetOriginFacilityReferralsForCoordinator(int coordinatorId)
+    {
+        var coordinator = await _context.ReferralCoordinators
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c =>
+                c.ReferralCoordinatorId == coordinatorId);
+
+        if (coordinator == null)
+            return new List<ReferralDto>();
+
+        var facilityId = coordinator.FacilityId;
+
+        return await _context.Referrals
+            .AsNoTracking()
+            .Include(r => r.Patient)
+                .ThenInclude(p => p.User)
+            .Include(r => r.OriginFacility)
+            .Include(r => r.DestinationFacility)
+            .Include(r => r.ReferralStatus)
+            .Include(r => r.SpecialtyRequest)
+            .Include(r => r.UrgencyLevel)
+            .Where(r => r.OriginFacilityId == facilityId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new ReferralDto
+            {
+                ReferralId = r.ReferralId,
+
+                PatientName =
+                    r.Patient.User.FirstName + " " +
+                    r.Patient.User.LastName,
+
+                OriginFacility =
+                    r.OriginFacility.FacilityName,
+
+                DestinationFacility =
+                    r.DestinationFacility.FacilityName,
+
+                Status =
+                    r.ReferralStatus.StatusName,
+
+                Urgency =
+                    r.UrgencyLevel.LevelName,
+
+                Specialty =
+                    r.SpecialtyRequest.SpecialtyName,
+
+                DiagnosisCode =
+                    r.DiagnosisCode,
+
+                CreatedAt =
+                    r.CreatedAt ?? DateTime.UtcNow
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<ReferralDto>>
+GetReferralsRaisedBySpecialistAsync(int specialistId)
+    {
+        return await _context.Referrals
+            .AsNoTracking()
+            .Include(r => r.Patient)
+                .ThenInclude(p => p.User)
+            .Include(r => r.OriginFacility)
+            .Include(r => r.DestinationFacility)
+            .Include(r => r.ReferralStatus)
+            .Include(r => r.SpecialtyRequest)
+            .Include(r => r.UrgencyLevel)
+            .Where(r => r.FromSpecialistId == specialistId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new ReferralDto
+            {
+                ReferralId = r.ReferralId,
+
+                PatientName =
+                    r.Patient.User.FirstName + " " +
+                    r.Patient.User.LastName,
+
+                OriginFacility =
+                    r.OriginFacility.FacilityName,
+
+                DestinationFacility =
+                    r.DestinationFacility.FacilityName,
+
+                Status =
+                    r.ReferralStatus.StatusName,
+
+                Urgency =
+                    r.UrgencyLevel.LevelName,
+
+                Specialty =
+                    r.SpecialtyRequest.SpecialtyName,
+
+                DiagnosisCode =
+                    r.DiagnosisCode,
+
+                CreatedAt =
+                    r.CreatedAt ?? DateTime.UtcNow
+            })
+            .ToListAsync();
+    }
+
 }

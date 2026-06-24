@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type {
-  CoordinatorReferral,
-  CoordinatorReferralStatus,
-  ReferralUrgency,
-} from "../../types/coordinatorReferral";
+
+import type { ReferralDTO } from "../../types/referral";
+
 import CoordinatorStatusBadge from "./CoordinatorStatusBadge.vue";
 import CoordinatorUrgencyBadge from "./CoordinatorUrgencyBadge.vue";
+import type { ReferralUrgency } from "../../types/coordinatorReferral.ts";
 
 const props = defineProps<{
-  referrals: CoordinatorReferral[];
+  referrals: ReferralDTO[];
   showFilters?: boolean;
   showSummary?: boolean;
   showActions?: boolean;
@@ -17,31 +16,27 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  view: [referral: CoordinatorReferral];
-  route: [referral: CoordinatorReferral];
+  view: [referral: ReferralDTO];
+  route: [referral: ReferralDTO];
 }>();
 
 const searchQuery = ref("");
-const statusFilter = ref<"All" | CoordinatorReferralStatus>("All");
-const urgencyFilter = ref<"All" | ReferralUrgency>("All");
 
-const statusOptions: Array<"All" | CoordinatorReferralStatus> = [
+const statusFilter = ref<string>("All");
+const urgencyFilter = ref<string>("All");
+
+const statusOptions = [
   "All",
   "Submitted",
   "Requested",
   "Accepted",
   "Rejected",
   "Scheduled",
-  "Closed",
+  "Completed",
   "Cancelled",
 ];
 
-const urgencyOptions: Array<"All" | ReferralUrgency> = [
-  "All",
-  "Urgent",
-  "Emergency",
-  "Routine",
-];
+const urgencyOptions = ["All", "Routine", "Urgent", "Emergency"];
 
 const filteredReferrals = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
@@ -49,12 +44,13 @@ const filteredReferrals = computed(() => {
   return props.referrals.filter((referral) => {
     const matchesSearch =
       !query ||
-      referral.id.toLowerCase().includes(query) ||
+      referral.referralId.toString().includes(query) ||
       referral.patientName.toLowerCase().includes(query) ||
-      referral.hospitalBranch.toLowerCase().includes(query);
+      referral.destinationFacility.toLowerCase().includes(query);
 
     const matchesStatus =
       statusFilter.value === "All" || referral.status === statusFilter.value;
+
     const matchesUrgency =
       urgencyFilter.value === "All" || referral.urgency === urgencyFilter.value;
 
@@ -67,10 +63,10 @@ const statusCounts = computed(() => ({
   submitted: props.referrals.filter((r) => r.status === "Submitted").length,
   requested: props.referrals.filter((r) => r.status === "Requested").length,
   accepted: props.referrals.filter((r) => r.status === "Accepted").length,
-  closed: props.referrals.filter((r) => r.status === "Closed").length,
+  completed: props.referrals.filter((r) => r.status === "Completed").length,
 }));
 
-const handleAction = (referral: CoordinatorReferral) => {
+const handleAction = (referral: ReferralDTO) => {
   if (props.actionLabel === "Route") {
     emit("route", referral);
   } else {
@@ -87,37 +83,17 @@ const handleAction = (referral: CoordinatorReferral) => {
     >
       <div class="flex items-center gap-4">
         <div class="relative flex-1">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            aria-hidden="true"
-          >
-            <circle
-              cx="11"
-              cy="11"
-              r="7"
-              stroke="currentColor"
-              stroke-width="1.75"
-            />
-            <path
-              d="M20 20l-3-3"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-            />
-          </svg>
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by patient, ID, or hospital branch..."
-            class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-colors focus:border-blue-400"
+            placeholder="Search by patient, referral ID, or facility..."
+            class="w-full rounded-xl border border-slate-200 bg-white py-2.5 px-4 text-sm"
           />
         </div>
 
         <select
           v-model="statusFilter"
-          class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition-colors focus:border-blue-400"
+          class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
         >
           <option v-for="option in statusOptions" :key="option" :value="option">
             Status: {{ option }}
@@ -126,7 +102,7 @@ const handleAction = (referral: CoordinatorReferral) => {
 
         <select
           v-model="urgencyFilter"
-          class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition-colors focus:border-blue-400"
+          class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
         >
           <option
             v-for="option in urgencyOptions"
@@ -139,31 +115,32 @@ const handleAction = (referral: CoordinatorReferral) => {
       </div>
 
       <div v-if="showSummary" class="flex flex-wrap items-center gap-3">
-        <span
-          class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"
-        >
+        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">
           Total: {{ statusCounts.total }}
         </span>
-        <span
-          class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"
-        >
+
+        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">
           Submitted: {{ statusCounts.submitted }}
         </span>
+
         <span
           class="rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700"
         >
           Requested: {{ statusCounts.requested }}
         </span>
+
         <span
           class="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700"
         >
           Accepted: {{ statusCounts.accepted }}
         </span>
+
         <span
           class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
         >
-          Closed: {{ statusCounts.closed }}
+          Completed: {{ statusCounts.completed }}
         </span>
+
         <span class="ml-auto text-sm text-slate-500">
           Showing {{ filteredReferrals.length }} referrals
         </span>
@@ -173,107 +150,91 @@ const handleAction = (referral: CoordinatorReferral) => {
     <div class="overflow-hidden">
       <table class="w-full">
         <thead>
-          <tr class="border-b border-slate-100 bg-slate-50/50">
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
+          <tr class="border-b border-slate-100 bg-slate-50">
+            <th class="px-6 py-3 text-left text-xs font-semibold">
               Referral ID
             </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Patient Name
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">Patient</th>
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">
+              Origin Facility
             </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Hospital Branch
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">
+              Destination Facility
             </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Urgency
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Assigned Specialist
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Status
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Date
-            </th>
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">Specialty</th>
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">Urgency</th>
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">Status</th>
+
+            <th class="px-6 py-3 text-left text-xs font-semibold">Created</th>
+
             <th
               v-if="showActions"
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+              class="px-6 py-3 text-left text-xs font-semibold"
             >
               Actions
             </th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             v-for="referral in filteredReferrals"
-            :key="referral.id"
-            class="border-b border-slate-100 last:border-b-0 transition-colors hover:bg-slate-50"
+            :key="referral.referralId"
+            class="border-b border-slate-100 hover:bg-slate-50"
           >
-            <td class="px-6 py-4">
-              <span class="text-sm font-medium text-blue-600">{{
-                referral.id
-              }}</span>
+            <td class="px-6 py-4 text-blue-600 font-medium">
+              #{{ referral.referralId }}
             </td>
-            <td class="px-6 py-4 text-sm font-semibold text-slate-900">
+
+            <td class="px-6 py-4">
               {{ referral.patientName }}
             </td>
-            <td class="px-6 py-4 text-sm text-slate-600">
-              {{ referral.hospitalBranch }}
-            </td>
+
             <td class="px-6 py-4">
-              <CoordinatorUrgencyBadge :urgency="referral.urgency" />
+              {{ referral.originFacility }}
             </td>
-            <td class="px-6 py-4 text-sm text-slate-600">
-              {{ referral.assignedSpecialist }}
-            </td>
+
             <td class="px-6 py-4">
-              <CoordinatorStatusBadge :status="referral.status" />
+              {{ referral.destinationFacility }}
             </td>
+
+            <td class="px-6 py-4">
+              {{ referral.specialty }}
+            </td>
+
+            <td class="px-6 py-4">
+              <CoordinatorUrgencyBadge
+                :urgency="referral.urgency as ReferralUrgency"
+              />
+            </td>
+
+            <td class="px-6 py-4">
+              <CoordinatorStatusBadge :status="referral.status as any" />
+            </td>
+
             <td class="px-6 py-4 text-sm text-slate-500">
-              {{ referral.date }}
+              {{ new Date(referral.createdAt).toLocaleDateString() }}
             </td>
+
             <td v-if="showActions" class="px-6 py-4">
               <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                class="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
                 @click="handleAction(referral)"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  class="h-4 w-4"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="2.5"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                  />
-                </svg>
-
                 {{ actionLabel || "View" }}
               </button>
+            </td>
+          </tr>
+
+          <tr v-if="filteredReferrals.length === 0">
+            <td colspan="9" class="px-6 py-8 text-center text-slate-500">
+              No referrals found.
             </td>
           </tr>
         </tbody>

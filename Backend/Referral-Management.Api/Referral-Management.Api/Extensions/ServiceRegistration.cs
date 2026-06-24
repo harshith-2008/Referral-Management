@@ -61,6 +61,7 @@ namespace Referral_Management.Api.Extensions
             services.AddScoped<IPatientService, PatientService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<ICoordinatorService, CoordinatorService>();
 
             // ✅ DbContext
             services.AddDbContext<AppDbContext>(options =>

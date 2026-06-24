@@ -8,8 +8,18 @@ export const specialistNavLinks: NavLink[] = [
     icon: "create",
   },
   {
-    label: "Assigned Referrals",
-    path: "/specialist/referrals",
+    label: "Appointments",
+    path: "/specialist/appointments",
+    icon: "referrals",
+  },
+  // {
+  //   label: "Assigned Referrals",
+  //   path: "/specialist/referrals",
+  //   icon: "referrals",
+  // },
+  {
+    label: "My Referrals",
+    path: "/specialist/my-referrals",
     icon: "referrals",
   },
   { label: "Profile", path: "/specialist/profile", icon: "profile" },

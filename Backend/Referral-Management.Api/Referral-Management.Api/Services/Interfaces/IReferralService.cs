@@ -14,5 +14,9 @@ public interface IReferralService
 
     Task<List<ReferralDto>> GetSubmittedReferralsForCoordinator(int coordinatorId);
 
+    Task<List<ReferralDto>> GetOriginFacilityReferralsForCoordinator(int coordinatorId);
+
+    Task<List<ReferralDto>> GetReferralsRaisedBySpecialistAsync(int specialistId);
+
 
 }
