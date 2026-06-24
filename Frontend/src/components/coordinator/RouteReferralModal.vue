@@ -55,9 +55,9 @@ const submitRouting = async () => {
 
   try {
     await routeReferral({
+      referralId: props.referral.referralId,
       patientId: props.referral.patientId,
       originFacilityId: props.referral.originFacilityId,
-      createdByCoordinatorId: 1, // replace later from JWT
 
       specialtyRequestId: props.referral.specialtyRequestId,
 
@@ -113,7 +113,9 @@ onMounted(loadFacilities);
               {{ facility.facilityName }}
             </p>
 
-            <p class="text-sm text-slate-500">3 specialists available</p>
+            <p class="text-sm text-slate-500">
+              {{ facility.availableSpecialists }} specialists available
+            </p>
           </div>
         </div>
       </div>

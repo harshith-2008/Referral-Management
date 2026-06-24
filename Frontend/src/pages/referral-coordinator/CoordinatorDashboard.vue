@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import StatsCards from "../../components/specialist/StatsCards.vue";
 import RecentReferralsTable from "../../components/coordinator/RecentReferralsTable.vue";
+
 import { coordinatorNavLinks } from "../../config/navigation";
-import { mockCoordinatorReferrals } from "../../data/mockCoordinatorReferrals";
+import { getDashboard } from "../../api/coordinator";
+
 import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
+import type { CoordinatorDashboardDTO } from "../../types/coordinator";
+import type { ReferralDTO } from "../../types/referral";
 
 const user = ref({
   name: "Sarah Mitchell",
@@ -14,12 +19,36 @@ const user = ref({
   initials: "SM",
 });
 
-const referrals = ref([...mockCoordinatorReferrals]);
+const loading = ref(false);
+
+const dashboard = ref<CoordinatorDashboardDTO>({
+  totalReferrals: 0,
+  submitted: 0,
+  requested: 0,
+  accepted: 0,
+  rejected: 0,
+  closed: 0,
+  recentReferrals: [],
+});
+
+const loadDashboard = async () => {
+  loading.value = true;
+
+  try {
+    const response = await getDashboard();
+
+    dashboard.value = response.data.data;
+  } catch (error) {
+    console.error("Failed to load dashboard", error);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const stats = computed<StatCardItem[]>(() => [
   {
     label: "Total Referrals",
-    value: referrals.value.length,
+    value: dashboard.value.totalReferrals,
     subtext: "All active records",
     icon: "clipboard",
     iconBg: "bg-blue-50",
@@ -27,7 +56,7 @@ const stats = computed<StatCardItem[]>(() => [
   },
   {
     label: "Submitted",
-    value: referrals.value.filter((r) => r.status === "Submitted").length,
+    value: dashboard.value.submitted,
     subtext: "Awaiting routing",
     icon: "clock",
     iconBg: "bg-amber-50",
@@ -35,7 +64,7 @@ const stats = computed<StatCardItem[]>(() => [
   },
   {
     label: "Requested",
-    value: referrals.value.filter((r) => r.status === "Requested").length,
+    value: dashboard.value.requested,
     subtext: "Sent to hospitals",
     icon: "users",
     iconBg: "bg-blue-50",
@@ -43,7 +72,7 @@ const stats = computed<StatCardItem[]>(() => [
   },
   {
     label: "Accepted",
-    value: referrals.value.filter((r) => r.status === "Accepted").length,
+    value: dashboard.value.accepted,
     subtext: "Docket assigned",
     icon: "check",
     iconBg: "bg-green-50",
@@ -51,7 +80,7 @@ const stats = computed<StatCardItem[]>(() => [
   },
   {
     label: "Rejected",
-    value: referrals.value.filter((r) => r.status === "Rejected").length,
+    value: dashboard.value.rejected,
     subtext: "Needs review",
     icon: "x",
     iconBg: "bg-red-50",
@@ -59,7 +88,7 @@ const stats = computed<StatCardItem[]>(() => [
   },
   {
     label: "Closed",
-    value: referrals.value.filter((r) => r.status === "Closed").length,
+    value: dashboard.value.closed,
     subtext: "Completed",
     icon: "archive",
     iconBg: "bg-green-50",
@@ -67,7 +96,9 @@ const stats = computed<StatCardItem[]>(() => [
   },
 ]);
 
-const recentReferrals = computed(() => referrals.value.slice(0, 5));
+const recentReferrals = computed(() => dashboard.value.recentReferrals);
+
+onMounted(loadDashboard);
 </script>
 
 <template>

@@ -12,7 +12,6 @@ import { getAssignedPatients } from "../../api/specialist";
 import { getSchedule } from "../../api/appointment";
 
 import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
-
 import type { SpecialistPatientDTO } from "../../types/referral";
 import type { AppointmentScheduleDTO } from "../../types/appointment";
 
@@ -28,7 +27,6 @@ const loading = ref(false);
 const scheduleDate = ref(new Date().toLocaleDateString());
 
 const referrals = ref<SpecialistPatientDTO[]>([]);
-
 const scheduleItems = ref<AppointmentScheduleDTO[]>([]);
 
 const loadDashboard = async () => {
@@ -43,71 +41,12 @@ const loadDashboard = async () => {
     ]);
 
     referrals.value = referralsResponse.data.data ?? [];
-
-    scheduleItems.value = scheduleResponse.data.data.appointments ?? [];
+    scheduleItems.value = scheduleResponse.data.data?.appointments ?? [];
   } catch (error) {
-    console.error(error);
+    console.error("Dashboard load failed:", error);
 
-    referrals.value = [
-      {
-        referralId: 101,
-        patientId: 1,
-        patientName: "John Smith",
-        age: 45,
-        gender: "Male",
-        mrn: "MRN001",
-        specialty: "Cardiology",
-        urgency: "Urgent",
-        diagnosisCode: "I20",
-        appointmentDate: "2026-06-22",
-      },
-      {
-        referralId: 102,
-        patientId: 2,
-        patientName: "Sarah Johnson",
-        age: 60,
-        gender: "Female",
-        mrn: "MRN002",
-        specialty: "Neurology",
-        urgency: "Routine",
-        diagnosisCode: "G40",
-      },
-      {
-        referralId: 103,
-        patientId: 3,
-        patientName: "Michael Brown",
-        age: 38,
-        gender: "Male",
-        mrn: "MRN003",
-        specialty: "Orthopedics",
-        urgency: "Emergency",
-        diagnosisCode: "M17",
-      },
-    ];
-
-    scheduleItems.value = [
-      {
-        appointmentId: 1,
-        appointmentTime: "09:00",
-        patientName: "John Smith",
-        mrn: "MRN001",
-        appointmentStatus: "Scheduled",
-      },
-      {
-        appointmentId: 2,
-        appointmentTime: "10:30",
-        patientName: "Sarah Johnson",
-        mrn: "MRN002",
-        appointmentStatus: "Scheduled",
-      },
-      {
-        appointmentId: 3,
-        appointmentTime: "14:00",
-        patientName: "Michael Brown",
-        mrn: "MRN003",
-        appointmentStatus: "Scheduled",
-      },
-    ];
+    referrals.value = [];
+    scheduleItems.value = [];
   } finally {
     loading.value = false;
   }
@@ -124,7 +63,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Urgent Cases",
     value: referrals.value.filter(
-      (x) => x.urgency === "Urgent" || x.urgency === "Emergency"
+      (x) => x.urgency === "Urgent" || x.urgency === "Emergency",
     ).length,
     icon: "clock",
     iconBg: "bg-amber-50",
@@ -171,7 +110,7 @@ onMounted(loadDashboard);
 
       <AssignedReferralsTable
         :referrals="referrals"
-        view-all-link="/specialist/referrals"
+        view-all-link="/specialist/appointments"
       />
     </div>
   </DashboardLayout>

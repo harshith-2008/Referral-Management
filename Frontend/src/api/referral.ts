@@ -11,10 +11,8 @@ import type {
 
 import type { SpecialistMatchDTO } from "../types/specialist";
 
-export const getRequestedReferrals = (coordinatorId: number) =>
-  api.get<ApiResponseDTO<ReferralDTO[]>>(
-    `/referral/requested/${coordinatorId}`,
-  );
+export const getRequestedReferrals = () =>
+  api.get<ApiResponseDTO<ReferralDTO[]>>("/referral/requested");
 
 export const getReferralDetails = (referralId: number) =>
   api.get<ApiResponseDTO<ReferralDetailDTO>>(`/referral/details/${referralId}`);
@@ -30,5 +28,10 @@ export const getFacilitiesDropdown = (referralId: number) =>
 export const routeReferral = (data: CreateReferralRequestDTO) =>
   api.post<ApiResponseDTO<any>>("/referral/route", data);
 
-export const getSubmittedPendingReferrals = (coordinatorId: number) =>
-  api.get(`/referral/submitted/${coordinatorId}`);
+export const getSubmittedPendingReferrals = () =>
+  api.get(`/referral/submitted`);
+
+export const getOriginFacilityReferrals = () =>
+  api.get<ApiResponseDTO<ReferralDTO[]>>("/referral/origin-facility");
+
+export const getMyReferrals = () => api.get("/referral/my-referrals");

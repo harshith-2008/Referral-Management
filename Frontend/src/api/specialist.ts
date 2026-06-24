@@ -9,9 +9,9 @@ import type {
 
 import type { ApiResponseDTO } from "../types/common";
 
-export const getAssignedPatients = (specialistId: number) =>
+export const getAssignedPatients = () =>
   api.get<ApiResponseDTO<SpecialistPatientDTO[]>>(
-    `/specialist/assigned-patients/${specialistId}`,
+    `/specialist/assigned-patients`,
   );
 
 export const createReferralIntake = (data: ReferralIntakeCreateDTO) =>

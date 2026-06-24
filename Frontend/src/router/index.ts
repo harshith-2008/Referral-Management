@@ -12,8 +12,8 @@ import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 import Unauthorized from "../pages/auth/Unauthorized.vue";
 import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
 import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
-import MyReferrals from "../pages/patient/MyReferrals.vue";
-//patinet related 
+import SpecialistAppointment from "../pages/specialist/SpecialistAppointment.vue";
+import MyReferrals from "../pages/specialist/MyReferrals.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -80,6 +80,22 @@ const router = createRouter({
     {
       path: "/specialist",
       component: SpecialistDashboard,
+      meta: {
+        requiresAuth: true,
+        roles: ["4"],
+      },
+    },
+    {
+      path: "/specialist/appointments",
+      component: SpecialistAppointment,
+      meta: {
+        requiresAuth: true,
+        roles: ["4"],
+      },
+    },
+    {
+      path: "/specialist/my-referrals",
+      component: MyReferrals,
       meta: {
         requiresAuth: true,
         roles: ["4"],

@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Referral_Management.Api.DTOs;
 using Referral_Management.Api.DTOs.Common;
 using Referral_Management.Api.Services.Interfaces;
+using System.Security.Claims;
 
 namespace Referral_Management.Api.Controllers;
 
@@ -16,47 +19,20 @@ public class ReferralController : ControllerBase
         _referralService = referralService;
     }
 
-    // ✅ GET: api/referral/requested/{coordinatorId}
-    [HttpGet("requested/{coordinatorId:int}")]
-    public async Task<IActionResult> GetRequestedReferrals(int coordinatorId)
+    [HttpGet("requested")]
+    public async Task<IActionResult> GetRequestedReferrals()
     {
-        // ✅ Validation: positive integer
-        if (coordinatorId <= 0)
-        {
-            return Ok(new ApiResponseDTO<object>
-            {
-                Success = false,
-                Message = "CoordinatorId must be a positive integer.",
-                Data = null
-            });
-        }
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
 
         var result = await _referralService
             .GetRequestedReferralsForCoordinator(coordinatorId);
 
-        // ✅ Coordinator not found
-        if (result == null)
-        {
-            return Ok(new ApiResponseDTO<object>
-            {
-                Success = false,
-                Message = $"Coordinator with id {coordinatorId} not found.",
-                Data = null
-            });
-        }
-
-        // ✅ No referrals
-        if (!result.Any())
-        {
-            return Ok(new ApiResponseDTO<List<ReferralDto>>
-            {
-                Success = true,
-                Message = "No requested referrals found for this coordinator.",
-                Data = result
-            });
-        }
-
-        // ✅ Success
         return Ok(new ApiResponseDTO<List<ReferralDto>>
         {
             Success = true,
@@ -65,7 +41,6 @@ public class ReferralController : ControllerBase
         });
     }
 
-    // ✅ GET: api/referral/details/{referralId}
     [HttpGet("details/{referralId:int}")]
     public async Task<IActionResult> GetReferralDetails(int referralId)
     {
@@ -145,14 +120,97 @@ public class ReferralController : ControllerBase
 
         return Ok(facilities);
     }
-    //End point for submitting Referrral request from Coordinator1->Coordinator2
+
+    [Authorize]
     [HttpPost("route")]
-    public async Task<IActionResult> RouteReferral([FromBody] CreateReferralRequest request)
+    public async Task<IActionResult> RouteReferral(
+        [FromBody] CreateReferralRequest request)
     {
-        var referrals = await _referralService.RouteReferralAsync(request);
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        Console.WriteLine($"Coordinator Claim: {coordinatorIdClaim}");
+
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
+
+        Console.WriteLine(request.CreatedByCoordinatorId);
+
+        request.CreatedByCoordinatorId = coordinatorId;
+
+        var referrals =
+            await _referralService.RouteReferralAsync(request);
+
         return Ok(referrals);
     }
 
-    
+    [HttpGet("submitted")]
+    public async Task<IActionResult> GetSubmittedReferrals()
+    {
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
 
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
+
+        var result = await _referralService
+            .GetSubmittedReferralsForCoordinator(coordinatorId);
+
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Submitted referrals fetched successfully.",
+            Data = result
+        });
+    }
+
+    [HttpGet("origin-facility")]
+    public async Task<IActionResult> GetOriginFacilityReferrals()
+    {
+        var coordinatorIdClaim =
+            User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        if (string.IsNullOrEmpty(coordinatorIdClaim))
+            return Unauthorized();
+
+        var coordinatorId = int.Parse(coordinatorIdClaim);
+
+        var result = await _referralService
+            .GetOriginFacilityReferralsForCoordinator(coordinatorId);
+
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Origin facility referrals fetched successfully.",
+            Data = result
+        });
+    }
+
+    [HttpGet("my-referrals")]
+    [Authorize(Roles = "Specialist")]
+    public async Task<IActionResult> GetMyReferrals()
+    {
+        var specialistIdClaim =
+            User.FindFirst("SpecialistId")?.Value;
+
+        if (string.IsNullOrEmpty(specialistIdClaim))
+            return Unauthorized();
+
+        var specialistId = int.Parse(specialistIdClaim);
+
+        var result =
+            await _referralService
+                .GetReferralsRaisedBySpecialistAsync(specialistId);
+
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Referrals retrieved successfully.",
+            Data = result
+        });
+    }
 }
