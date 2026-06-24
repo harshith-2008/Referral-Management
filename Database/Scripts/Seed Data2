@@ -1,0 +1,142 @@
+-- =========================
+-- ROLES (if not inserted)
+-- =========================
+INSERT INTO Role (RoleName) VALUES
+('Admin'), ('ReferralCoordinator'), ('Patient'), ('Specialist');
+
+-- =========================
+-- SHIFT BLOCK
+-- =========================
+INSERT INTO ShiftBlock (StartTime, EndTime) VALUES
+('07:00','15:00'),
+('15:00','23:00'),
+('23:00','07:00');
+
+-- =========================
+-- SPECIALTIES
+-- =========================
+INSERT INTO Specialty (SpecialtyName, Code) VALUES
+('Cardiology','CARD'),
+('Dermatology','DERM'),
+('Neurology','NEUR');
+
+-- =========================
+-- URGENCY LEVEL
+-- =========================
+INSERT INTO UrgencyLevel (LevelName) VALUES
+('Routine'), ('Urgent'), ('Emergency');
+
+-- =========================
+-- REFERRAL STATUS
+-- =========================
+INSERT INTO ReferralStatus (StatusName) VALUES
+('Requested'), ('Submitted'), ('Accepted'),
+('Rejected'), ('Scheduled'), ('Completed');
+
+-- =========================
+-- APPOINTMENT STATUS
+-- =========================
+INSERT INTO AppointmentStatus (StatusName) VALUES
+('Scheduled'), ('Cancelled'), ('Completed');
+
+-- =========================
+-- USERS
+-- =========================
+INSERT INTO [User]
+(RoleId, FacilityId, FirstName, LastName, Email, PhoneNumber, PasswordHash)
+VALUES
+(1,1,'Admin','User','admin@demo.com','9000000001','hash1'),
+(2,1,'Coord','One','coord1@demo.com','9000000002','hash2'),
+(3,1,'John','Doe','john@demo.com','9000000003','hash3'),
+(4,1,'Dr','Smith','smith@demo.com','9000000004','hash4'),
+(4,2,'Dr','Emily','emily@demo.com','9000000005','hash5');
+
+-- =========================
+-- ADMIN
+-- =========================
+INSERT INTO Admin (UserId)
+VALUES (1);
+
+-- =========================
+-- REFERRAL COORDINATOR
+-- =========================
+INSERT INTO ReferralCoordinator (UserId, FacilityId)
+VALUES (2,1);
+
+-- =========================
+-- PATIENT
+-- =========================
+INSERT INTO Patient
+(Mrn, UserId, PrimaryFacilityId, Dob, Gender, PatientAddress)
+VALUES
+('MRN001',3,1,'1995-06-15','M','Hyderabad, India');
+
+-- =========================
+-- SPECIALISTS
+-- =========================
+INSERT INTO Specialist (UserId, FacilityId, ShiftBlockId)
+VALUES
+(4,1,1),
+(5,2,2);
+
+-- =========================
+-- SPECIALIST SPECIALTIES
+-- =========================
+INSERT INTO SpecialistSpecialities (SpecialtyId, SpecialistId, IsPrimary)
+VALUES
+(1,1,1),
+(3,2,1);
+
+-- =========================
+-- REFERRALS
+-- =========================
+INSERT INTO Referral
+(
+PatientId,
+OriginFacilityId,
+DestinationFacilityId,
+CreatedByCoordinatorId,
+FromSpecialistId,
+SpecialtyRequestId,
+UrgencyLevelId,
+ReferralStatusId,
+ReferralReason,
+CreatedAt,
+UpdatedAt,
+DiagnosisCode
+)
+VALUES
+(1,1,2,1,1,1,2,1,'Chest pain evaluation',SYSUTCDATETIME(),SYSUTCDATETIME(),'I20'),
+(1,1,2,1,1,3,1,5,'Neurology consultation',SYSUTCDATETIME(),SYSUTCDATETIME(),'G43');
+
+-- =========================
+-- REFERRAL ASSIGNMENT
+-- =========================
+INSERT INTO ReferralAssignment
+(ReferralId, AssignedBy, FromSpecialistId, ToSpecialistId, Reason)
+VALUES
+(2,1,1,2,'Assigned to neurologist');
+
+-- =========================
+-- APPOINTMENTS
+-- =========================
+INSERT INTO Appointment
+(
+ReferralId,
+SpecialistId,
+PatientId,
+AppointmentDate,
+AppointmentTime,
+AppointmentStatusId
+)
+VALUES
+(2,2,1,'2026-06-25','10:30',1);
+
+-- =========================
+-- AUDIT LOG
+-- =========================
+INSERT INTO AuditLog
+(ActionUser, ReferralId, EntityType, Action, NewValues)
+VALUES
+(2,1,'Referral','CREATE','Created referral for cardiology'),
+(2,2,'Referral','SCHEDULE','Scheduled neurology referral');

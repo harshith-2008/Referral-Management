@@ -141,6 +141,14 @@ const router = createRouter({
         roles: ["4"],
       },
     },
+    {
+  path: "/patient/referrals",
+  component: MyReferrals,
+  meta: {
+    requiresAuth: true,
+    roles: ["3"],
+  },
+},
   ],
 });
 
