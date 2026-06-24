@@ -1,0 +1,72 @@
+admin:
+{
+  "roleId": 1,
+  "facilityId": 1,
+  "firstName": "Admin",
+  "lastName": "One",
+  "email": "admin@test.com",
+  "password": "Admin@123",
+  "phoneNumber": "9999999991",
+  "mrn": null,
+  "dob": null,
+  "gender": null,
+  "insuranceProviderName": null,
+  "insuranceStatus": null,
+  "patientAddress": null,
+  "shiftBlockId": null,
+  "specialties": []
+}
+
+{
+  "roleId": 2,
+  "facilityId": 1,
+  "firstName": "Coordinator",
+  "lastName": "One",
+  "email": "coord@test.com",
+  "password": "Coord@123",
+  "phoneNumber": "9999999992",
+  "mrn": null,
+  "dob": null,
+  "gender": null,
+  "insuranceProviderName": null,
+  "insuranceStatus": null,
+  "patientAddress": null,
+  "shiftBlockId": null,
+  "specialties": []
+}
+
+{
+  "roleId": 3,
+  "facilityId": 1,
+  "firstName": "Patient",
+  "lastName": "One",
+  "email": "patient1@test.com",
+  "password": "Patient@123",
+  "phoneNumber": "9999999993",
+  "mrn": "MRN001",
+  "dob": "1990-01-01",
+  "gender": "M",
+  "insuranceProviderName": "Aetna",
+  "insuranceStatus": "Active",
+  "patientAddress": "Hyderabad",
+  "shiftBlockId": null,
+  "specialties": []
+}
+
+{
+  "roleId": 3,
+  "facilityId": 1,
+  "firstName": "Patient",
+  "lastName": "Two",
+  "email": "patient2@test.com",
+  "password": "Patient@123",
+  "phoneNumber": "9999999994",
+  "mrn": "MRN002",
+  "dob": "1985-06-10",
+  "gender": "F",
+  "insuranceProviderName": "BlueCross",
+  "insuranceStatus": "Active",
+  "patientAddress": "Hyderabad",
+  "shiftBlockId": null,
+  "specialties": []
+}
