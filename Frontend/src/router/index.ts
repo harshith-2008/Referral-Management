@@ -12,6 +12,8 @@ import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 import Unauthorized from "../pages/auth/Unauthorized.vue";
 import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
 import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
+import MyReferrals from "../pages/patient/MyReferrals.vue";
+//patinet related 
 
 const router = createRouter({
   history: createWebHistory(),
@@ -123,6 +125,14 @@ const router = createRouter({
         roles: ["4"],
       },
     },
+    {
+  path: "/patient/referrals",
+  component: MyReferrals,
+  meta: {
+    requiresAuth: true,
+    roles: ["3"],
+  },
+},
   ],
 });
 
