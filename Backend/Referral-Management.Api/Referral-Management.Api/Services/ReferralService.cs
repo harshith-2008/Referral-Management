@@ -140,10 +140,8 @@ public class ReferralService : IReferralService
     }
     public async Task<IEnumerable<FacilityDto>> GetFacilitiesForReferralDropdownAsync(int referralId)
     {
-        // Load referral with origin facility and hospital
         var referral = await _context.Referrals
             .Include(r => r.OriginFacility)
-            .ThenInclude(f => f.Hospital)
             .FirstOrDefaultAsync(r => r.ReferralId == referralId);
 
         if (referral == null)
@@ -151,25 +149,42 @@ public class ReferralService : IReferralService
 
         var hospitalId = referral.OriginFacility.HospitalId;
         var originFacilityId = referral.OriginFacilityId;
-        var requestedSpecialityId = referral.SpecialtyRequestId; // matches your schema
+        var requestedSpecialityId = referral.SpecialtyRequestId;
 
-        // Query facilities in same hospital, different from origin facility,
-        // that have specialists with the requested specialty
+        // Cast origin coordinates to double
+        var originLat = (double)referral.OriginFacility.Latitude;
+        var originLon = (double)referral.OriginFacility.Longitude;
+
         var facilities = await _context.Facilities
             .Include(f => f.Specialists)
-            .ThenInclude(s => s.SpecialistSpecialities)
+                .ThenInclude(s => s.SpecialistSpecialities)
             .Where(f => f.HospitalId == hospitalId &&
                         f.FacilityId != originFacilityId &&
                         f.Specialists.Any(s => s.SpecialistSpecialities
                             .Any(ss => ss.SpecialtyId == requestedSpecialityId)))
+            .Select(f => new
+            {
+                f.FacilityId,
+                f.FacilityName,
+                Distance =
+                    6371 * Math.Acos(
+                        Math.Cos(Math.PI * originLat / 180.0) *
+                        Math.Cos(Math.PI * (double)f.Latitude / 180.0) *
+                        Math.Cos(Math.PI * (double)f.Longitude / 180.0 - Math.PI * originLon / 180.0) +
+                        Math.Sin(Math.PI * originLat / 180.0) *
+                        Math.Sin(Math.PI * (double)f.Latitude / 180.0)
+                    )
+            })
+            .OrderBy(f => f.Distance)
             .ToListAsync();
-
         return facilities.Select(f => new FacilityDto
         {
             FacilityId = f.FacilityId,
             FacilityName = f.FacilityName
         });
     }
+
+
 
     //send the referral details to the coordinators in other facilities
     public async Task<List<Referral>> RouteReferralAsync(CreateReferralRequest request)
