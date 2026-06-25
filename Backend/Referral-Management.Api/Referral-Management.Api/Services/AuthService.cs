@@ -75,7 +75,7 @@ public class AuthService : IAuthService
             switch (dto.RoleId)
             {
                 case 1:
-                    await CreateAdminAsync(user.UserId);
+                    await CreatePatientAsync(user.UserId, dto); 
                     break;
 
                 case 2:
@@ -83,11 +83,11 @@ public class AuthService : IAuthService
                     break;
 
                 case 3:
-                    await CreatePatientAsync(user.UserId, dto);
+                    await CreateSpecialistAsync(user.UserId, dto);
                     break;
 
                 case 4:
-                    await CreateSpecialistAsync(user.UserId, dto);
+                    await CreateAdminAsync(user.UserId);
                     break;
 
                 default:

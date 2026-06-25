@@ -6,7 +6,7 @@ namespace Referral_Management.Api.Services
     public interface IPatientService
     {
 
-        Task<PatientReferralLookupDto> GetPatientForReferralAsync(string mrn);
+      //  Task<PatientReferralLookupDto> GetPatientForReferralAsync(string mrn);
 
         // ==========================
         // Dashboard
