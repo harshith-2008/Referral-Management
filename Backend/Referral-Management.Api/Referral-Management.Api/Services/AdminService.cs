@@ -11,6 +11,20 @@ public class AdminService : IAdminService
     {
         _context = context;
     }
+    public async Task<List<UserListDto>> GetUsersAsync()
+    {
+        return await _context.Users
+            .Where(u => u.Role.RoleName != "Admin")
+            .Select(u => new UserListDto
+            {
+                UserId = u.UserId,
+                Name = u.FirstName + " " + u.LastName,
+                Email = u.Email,
+                Role = u.Role.RoleName,
+                Facility = u.Facility.FacilityName
+            })
+            .ToListAsync();
+    }
 
     // ================= DASHBOARD =================
     public async Task<AdminDashboardDto> GetDashboardAsync()
@@ -22,8 +36,14 @@ public class AdminService : IAdminService
             TotalSpecialists = await _context.Specialists.CountAsync(),
             TotalReferrals = await _context.Referrals.CountAsync(),
 
-            PendingReferrals = await _context.Referrals
-                .CountAsync(r => r.ReferralStatus.StatusName == "Pending"),
+
+            PendingReferrals = await _context.Referrals.CountAsync(r =>
+                r.ReferralStatus.StatusName == "Requested" ||
+                r.ReferralStatus.StatusName == "Submitted" ||
+                r.ReferralStatus.StatusName == "Accepted" ||
+                r.ReferralStatus.StatusName == "Scheduled"
+),
+
 
             CompletedReferrals = await _context.Referrals
                 .CountAsync(r => r.ReferralStatus.StatusName == "Completed"),
@@ -41,30 +61,51 @@ public class AdminService : IAdminService
     {
         var total = await _context.Referrals.CountAsync();
 
-        var referralsWithoutAppointments = await _context.Referrals
+        // ✅ No appointment
+        var noAppointment = await _context.Referrals
             .Where(r => !r.Appointments.Any())
-            .CountAsync();
+            .Select(r => r.ReferralId)
+            .ToListAsync();
 
+        // ✅ Delayed appointments (> 5 days from creation)
         var delayed = await _context.Referrals
-            .Where(r => r.Appointments.Any(a =>
-r.CreatedAt.HasValue &&
-a.AppointmentDate > DateOnly.FromDateTime(r.CreatedAt.Value.AddDays(5))
-))
-            .CountAsync();
+            .Where(r =>
+                r.Appointments.Any(a =>
+                    r.CreatedAt.HasValue &&
+                    a.AppointmentDate > DateOnly.FromDateTime(r.CreatedAt.Value.AddDays(5))
+                )
+            )
+            .Select(r => r.ReferralId)
+            .ToListAsync();
 
-        var notCompleted = await _context.Referrals
-            .CountAsync(r => r.ReferralStatus.StatusName != "Completed");
+        // ✅ Failed outcomes (Rejected / Closed)
+        var failed = await _context.Referrals
+            .Where(r =>
+                r.ReferralStatus.StatusName == "Rejected" ||
+                r.ReferralStatus.StatusName == "Closed"
+            )
+            .Select(r => r.ReferralId)
+            .ToListAsync();
 
-        var leakage = referralsWithoutAppointments + delayed + notCompleted;
+        // ✅ Combine all leakage cases WITHOUT duplicates
+        var leakageIds = noAppointment
+            .Union(delayed)
+            .Union(failed)
+            .Distinct()
+            .ToList();
+
+        var leakageCount = leakageIds.Count;
 
         return new ReferralLeakageDto
         {
             TotalReferrals = total,
-            LeakageCount = leakage,
-            LeakagePercentage = total == 0 ? 0 : (double)leakage / total * 100,
-            NoAppointment = referralsWithoutAppointments,
-            DelayedAppointments = delayed,
-            NeverCompleted = notCompleted
+            LeakageCount = leakageCount,
+            LeakagePercentage = total == 0 ? 0 : (double)leakageCount / total * 100,
+
+            // ✅ Breakdown (can overlap — that's fine for insight)
+            NoAppointment = noAppointment.Count,
+            DelayedAppointments = delayed.Count,
+            NeverCompleted = failed.Count
         };
     }
 
@@ -125,16 +166,97 @@ a.AppointmentDate > DateOnly.FromDateTime(r.CreatedAt.Value.AddDays(5))
     }
 
     // ================= DAILY REFERRALS =================
+
     public async Task<List<DailyReferralDto>> GetDailyReferralsAsync()
     {
         return await _context.Referrals
+            .Where(r => r.CreatedAt.HasValue) // ✅ safety
             .GroupBy(r => r.CreatedAt.Value.Date)
             .Select(g => new DailyReferralDto
             {
                 Date = g.Key,
                 Count = g.Count()
             })
-            .OrderBy(x => x.Date)
+            .OrderByDescending(x => x.Date) // ✅ latest first
+            .Take(5)                        // ✅ last 5 days ONLY
+            .OrderBy(x => x.Date)           // ✅ reorder ascending for UI
             .ToListAsync();
     }
+    public async Task<List<MonthlyReferralDto>> GetMonthlyReferralAsync()
+    {
+        return await _context.Referrals
+            .Where(r => r.CreatedAt.HasValue)
+            .GroupBy(r => new
+            {
+                r.CreatedAt.Value.Year,
+                r.CreatedAt.Value.Month
+            })
+            .Select(g => new MonthlyReferralDto
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                Count = g.Count()
+            })
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Month)
+            .ToListAsync();
+    }
+    public async Task<List<TopSpecialistDto>> GetTopSpecialistsAsync()
+    {
+        return await _context.Referrals
+            .GroupBy(r => r.FromSpecialist.User.FirstName + " " + r.FromSpecialist.User.LastName)
+            .Select(g => new TopSpecialistDto
+            {
+                Specialist = g.Key,
+                Referrals = g.Count()
+            })
+            .OrderByDescending(x => x.Referrals)
+            .Take(5)
+            .ToListAsync();
+    }
+    public async Task<ReferralAgingDto> GetReferralAgingAsync()
+    {
+        var activeReferrals = await _context.Referrals
+            .Where(r =>
+                r.CreatedAt.HasValue &&
+                (
+                    r.ReferralStatus.StatusName == "Requested" ||
+                    r.ReferralStatus.StatusName == "Submitted" ||
+                    r.ReferralStatus.StatusName == "Accepted"
+                )
+            )
+            .Select(r => new
+            {
+                days = (DateTime.UtcNow - r.CreatedAt.Value).Days
+            })
+            .ToListAsync();
+
+        return new ReferralAgingDto
+        {
+            LessThan3 = activeReferrals.Count(x => x.days <= 3),
+            Between3And7 = activeReferrals.Count(x => x.days > 3 && x.days <= 7),
+            MoreThan7 = activeReferrals.Count(x => x.days > 7)
+        };
+    }
+    public async Task<ScheduledDelayDto> GetScheduledDelaysAsync()
+    {
+        var scheduled = await _context.Referrals
+            .Where(r =>
+                r.CreatedAt.HasValue &&
+                r.ReferralStatus.StatusName == "Scheduled"
+            )
+            .Select(r => new
+            {
+                days = (DateTime.UtcNow - r.CreatedAt.Value).Days
+            })
+            .ToListAsync();
+
+        return new ScheduledDelayDto
+        {
+            TotalScheduled = scheduled.Count,
+            Delayed = scheduled.Count(x => x.days > 7),
+            Healthy = scheduled.Count(x => x.days <= 7)
+        };
+    }
+
 }

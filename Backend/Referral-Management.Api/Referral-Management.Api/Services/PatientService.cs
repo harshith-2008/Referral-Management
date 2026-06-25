@@ -2,6 +2,7 @@
 using Referral_Management.Api.DTOs.Patient;
 using Referral_Management.Api.Exceptions;
 using Referral_Management.Api.Models;
+using Referral_Management.Api.Services.Interfaces;
 
 namespace Referral_Management.Api.Services
 {
