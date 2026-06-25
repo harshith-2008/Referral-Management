@@ -3,33 +3,55 @@ import { ref, onMounted } from "vue";
 
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import ReferralReviewModal from "../../components/referrals/ReferralReviewModal.vue";
+import MyReferralsTable from "../../components/specialist/MyReferralsTable.vue";
 
 import { specialistNavLinks } from "../../config/navigation.ts";
 
 import { getMyReferrals, getReferralDetails } from "../../api/referral.ts";
-import MyReferralsTable from "../../components/specialist/MyReferralsTable.vue";
-import type { ReferralDTO, ReferralDetailDTO } from "../../types/referral.ts";
 
-const user = ref({
-  name: "Dr. James Rivera",
-  welcomeName: "Dr. Rivera",
-  role: "Cardiologist",
-  initials: "JR",
-});
+import { getErrorMessage } from "../../utils/errorHandler";
+
+import type { ReferralDTO, ReferralDetailDTO } from "../../types/referral.ts";
 
 const referrals = ref<ReferralDTO[]>([]);
 const selectedReferral = ref<ReferralDetailDTO | null>(null);
 
-const loadReferrals = async () => {
-  const response = await getMyReferrals();
+const loading = ref(false);
+const errorMessage = ref("");
+const infoMessage = ref("");
 
-  referrals.value = response.data.data;
+const loadReferrals = async () => {
+  errorMessage.value = "";
+  infoMessage.value = "";
+
+  try {
+    loading.value = true;
+
+    const response = await getMyReferrals();
+
+    referrals.value = response.data.data ?? [];
+
+    if (referrals.value.length === 0) {
+      infoMessage.value = "You have not submitted any referrals yet.";
+    }
+  } catch (error) {
+    referrals.value = [];
+    errorMessage.value = getErrorMessage(error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 const openReferral = async (referral: ReferralDTO) => {
-  const response = await getReferralDetails(referral.referralId);
+  errorMessage.value = "";
 
-  selectedReferral.value = response.data.data;
+  try {
+    const response = await getReferralDetails(referral.referralId);
+
+    selectedReferral.value = response.data.data;
+  } catch (error) {
+    errorMessage.value = getErrorMessage(error);
+  }
 };
 
 const closeReferral = () => {
@@ -42,16 +64,39 @@ onMounted(loadReferrals);
 <template>
   <DashboardLayout
     :nav-links="specialistNavLinks"
-    :user="user"
     title="My Referrals"
     subtitle="View all the referrals that you submitted"
     :notification-count="2"
   >
-    <MyReferralsTable
-      :referrals="referrals"
-      show-actions
-      @view="openReferral"
-    />
+    <div class="space-y-4">
+      <div
+        v-if="errorMessage"
+        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        {{ errorMessage }}
+      </div>
+
+      <div
+        v-if="infoMessage"
+        class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700"
+      >
+        {{ infoMessage }}
+      </div>
+
+      <div
+        v-if="loading"
+        class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500"
+      >
+        Loading referrals...
+      </div>
+
+      <MyReferralsTable
+        v-else
+        :referrals="referrals"
+        show-actions
+        @view="openReferral"
+      />
+    </div>
 
     <ReferralReviewModal
       v-if="selectedReferral"

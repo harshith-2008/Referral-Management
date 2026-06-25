@@ -387,4 +387,62 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync();
     }
+
+    public async Task<UserProfileDTO> GetCurrentUserAsync(int userId)
+    {
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .Include(u => u.Facility)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+            throw new UnauthorizedException("User not found");
+
+        var profile = new UserProfileDTO
+        {
+            UserId = user.UserId,
+            Email = user.Email,
+            Role = user.Role.RoleName,
+
+            FacilityId = user.FacilityId,
+            FacilityName = user.Facility.FacilityName,
+
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Phone = user.PhoneNumber
+        };
+
+        switch (user.RoleId)
+        {
+            case 1:
+                profile.PatientId = await _context.Patients
+                    .Where(p => p.UserId == userId)
+                    .Select(p => p.PatientId)
+                    .FirstOrDefaultAsync();
+                break;
+
+            case 2:
+                profile.ReferralCoordinatorId = await _context.ReferralCoordinators
+                    .Where(c => c.UserId == userId)
+                    .Select(c => c.ReferralCoordinatorId)
+                    .FirstOrDefaultAsync();
+                break;
+
+            case 3:
+                profile.SpecialistId = await _context.Specialists
+                    .Where(s => s.UserId == userId)
+                    .Select(s => s.SpecialistId)
+                    .FirstOrDefaultAsync();
+                break;
+
+            case 4:
+                profile.AdminId = await _context.Admins
+                    .Where(a => a.UserId == userId)
+                    .Select(a => a.AdminId)
+                    .FirstOrDefaultAsync();
+                break;
+        }
+
+        return profile;
+    }
 }

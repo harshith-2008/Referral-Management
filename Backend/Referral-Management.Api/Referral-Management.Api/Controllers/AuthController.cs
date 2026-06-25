@@ -47,14 +47,20 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public IActionResult Me()
+    public async Task<IActionResult> Me()
     {
-        return Ok(new
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _authService.GetCurrentUserAsync(int.Parse(userId));
+
+        return Ok(new ApiResponseDTO<UserProfileDTO>
         {
-            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-            Email =  User.FindFirst(ClaimTypes.Email)?.Value,
-            Role = User.FindFirst(ClaimTypes.Role)?.Value,
-            FacilityId = User.FindFirst("FacilityId")?.Value
+            Success = true,
+            Message = "Profile fetched successfully",
+            Data = result
         });
     }
 }

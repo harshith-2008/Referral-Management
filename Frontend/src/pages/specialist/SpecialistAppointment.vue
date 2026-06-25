@@ -31,27 +31,40 @@ const selectedAppointment = ref<AppointmentDetailsDTO | null>(null);
 
 const loading = ref(false);
 
+const errorMessage = ref("");
+const infoMessage = ref("");
+
 const loadAppointments = async () => {
+  errorMessage.value = "";
+  infoMessage.value = "";
+
   try {
     loading.value = true;
 
     const response = await getSchedule(selectedDate.value);
 
-    appointments.value = response.data.data.appointments;
+    appointments.value = response.data.data?.appointments ?? [];
+
+    if (appointments.value.length === 0) {
+      infoMessage.value = "No appointments scheduled for the selected date.";
+    }
   } catch (error) {
-    alert(getErrorMessage(error));
+    appointments.value = [];
+    errorMessage.value = getErrorMessage(error);
   } finally {
     loading.value = false;
   }
 };
 
-const openDetails = async (appointment: any) => {
+const openDetails = async (appointment: AppointmentScheduleDTO) => {
+  errorMessage.value = "";
+
   try {
     const response = await getAppointmentDetails(appointment.appointmentId);
 
     selectedAppointment.value = response.data.data;
   } catch (error) {
-    alert(getErrorMessage(error));
+    errorMessage.value = getErrorMessage(error);
   }
 };
 
@@ -65,7 +78,6 @@ onMounted(loadAppointments);
 <template>
   <DashboardLayout
     :nav-links="specialistNavLinks"
-    :user="user"
     title="My Appointments"
     subtitle="Manage your daily schedule"
     :notification-count="2"
@@ -81,7 +93,32 @@ onMounted(loadAppointments);
       />
     </div>
 
-    <AppointmentsTable :appointments="appointments" @view="openDetails" />
+    <div
+      v-if="errorMessage"
+      class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <div
+      v-if="infoMessage"
+      class="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700"
+    >
+      {{ infoMessage }}
+    </div>
+
+    <div
+      v-if="loading"
+      class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500"
+    >
+      Loading appointments...
+    </div>
+
+    <AppointmentsTable
+      v-else
+      :appointments="appointments"
+      @view="openDetails"
+    />
 
     <AppointmentDetailsModal
       v-if="selectedAppointment"

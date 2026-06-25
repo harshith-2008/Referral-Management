@@ -29,16 +29,11 @@ const closeReview = () => {
 <template>
   <DashboardLayout
     :nav-links="specialistNavLinks"
-    :user="user"
     title="Assigned Referrals"
     subtitle="Manage your referral workload"
     :notification-count="2"
   >
-    <ReferralsTable
-      :referrals="referrals"
-      show-actions
-      @review="openReview"
-    />
+    <ReferralsTable :referrals="referrals" show-actions @review="openReview" />
 
     <ReferralReviewModal
       v-if="selectedReferral"

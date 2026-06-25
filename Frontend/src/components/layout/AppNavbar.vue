@@ -1,46 +1,58 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { getMe } from "../../api/authApi";
+
 defineProps<{
   title: string;
   subtitle: string;
-  userInitials: string;
   notificationCount?: number;
 }>();
+
+const firstName = ref("");
+const lastName = ref("");
+
+onMounted(async () => {
+  try {
+    const res = await getMe();
+    const data = res.data.data;
+
+    firstName.value = data.firstName ?? "";
+    lastName.value = data.lastName ?? "";
+  } catch (error) {
+    console.error("Failed to load user profile", error);
+  }
+});
+
+const userInitials = computed(
+  () => (firstName.value?.[0] ?? "") + (lastName.value?.[0] ?? ""),
+);
 </script>
 
 <template>
   <header
-    class="flex h-[88px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-8"
+    class="flex h-[72px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-8"
   >
     <div>
-      <h1 class="text-2xl font-bold text-slate-900">{{ title }}</h1>
-      <p class="mt-0.5 text-sm text-slate-500">{{ subtitle }}</p>
+      <h1 class="text-[18px] font-semibold text-slate-900 leading-tight">
+        {{ title }}
+      </h1>
+      <p class="text-[12px] text-slate-400 mt-0.5">{{ subtitle }}</p>
     </div>
 
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
+      <!-- Notifications -->
+      <!--
       <button
         type="button"
-        class="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+        class="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
         aria-label="Notifications"
       >
-        <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" aria-hidden="true">
-          <path
-            d="M15 17H9M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
-            stroke="currentColor"
-            stroke-width="1.75"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span
-          v-if="notificationCount && notificationCount > 0"
-          class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-        >
-          {{ notificationCount }}
-        </span>
+        ...
       </button>
+      -->
 
       <div
-        class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white"
+        class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-[11px] font-semibold text-white"
       >
         {{ userInitials }}
       </div>

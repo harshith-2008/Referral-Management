@@ -1,17 +1,16 @@
 import axios from "axios";
 
-interface ApiErrorResponse {
-  success: boolean;
-  message: string;
-  data: unknown;
-}
-
 export function getErrorMessage(error: unknown): string {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as any;
+
     return (
-      error.response?.data?.message ||
+      data?.message ||
+      data?.Message ||
+      data?.title ||
       error.response?.statusText ||
-      "Request failed"
+      error.message ||
+      "Something went wrong"
     );
   }
 
