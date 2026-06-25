@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import NavIcon from "../icons/NavIcon.vue";
 import type { NavLink, SidebarUser } from "../../types/navigation";
+import { logout } from "../../api/authApi.ts";
 
 const props = defineProps<{
   navLinks: NavLink[];
@@ -10,21 +11,31 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
-
+const router = useRouter();
 const isActive = (path: string) => {
   if (path === route.path) return true;
   return route.path.startsWith(`${path}/`);
 };
 
 const userInitials = computed(() => props.user.initials);
+
+const handleLogout = async () => {
+  await logout();
+  localStorage.removeItem("token");
+  router.push("/login");
+};
 </script>
 
 <template>
-  <aside class="flex w-[260px] shrink-0 flex-col border-r border-slate-200 bg-white">
+  <aside
+    class="flex w-[260px] shrink-0 flex-col border-r border-slate-200 bg-white"
+  >
     <!-- Logo -->
     <div class="border-b border-slate-100 px-6 py-5">
       <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"
+        >
           <NavIcon name="logo" />
         </div>
         <div>
@@ -44,7 +55,9 @@ const userInitials = computed(() => props.user.initials);
             {{ userInitials }}
           </div>
           <div class="min-w-0">
-            <p class="truncate text-sm font-semibold text-slate-900">{{ user.name }}</p>
+            <p class="truncate text-sm font-semibold text-slate-900">
+              {{ user.name }}
+            </p>
             <p class="truncate text-xs text-slate-500">{{ user.role }}</p>
           </div>
         </div>
@@ -70,14 +83,14 @@ const userInitials = computed(() => props.user.initials);
       </RouterLink>
     </nav>
 
-    <!-- Switch role -->
     <div class="border-t border-slate-100 px-4 py-5">
       <button
         type="button"
-        class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+        @click="handleLogout"
+        class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
       >
         <NavIcon name="switch-role" />
-        Switch Role
+        Logout
       </button>
     </div>
   </aside>
