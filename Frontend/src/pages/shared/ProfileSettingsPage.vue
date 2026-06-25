@@ -1,52 +1,61 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import PersonalInfoCard from "../../components/profile/PersonalInfoCard.vue";
+
 import {
   adminNavLinks,
   coordinatorNavLinks,
   patientNavLinks,
   specialistNavLinks,
 } from "../../config/navigation";
-import { mockCoordinatorProfile } from "../../data/mockCoordinatorProfile";
-import { mockProfile } from "../../data/mockProfile";
-import type { NavLink, SidebarUser } from "../../types/navigation";
 
-const props = defineProps<{
-  navLinks?: NavLink[];
-  user?: SidebarUser;
-}>();
+import type { SidebarUser } from "../../types/navigation";
+import type { UserProfile } from "../../types/profile";
+import { getMe } from "../../api/authApi";
 
 const route = useRoute();
 
 const navLinks = computed(() => {
-  if (props.navLinks) return props.navLinks;
   if (route.path.startsWith("/admin")) return adminNavLinks;
   if (route.path.startsWith("/coordinator")) return coordinatorNavLinks;
   if (route.path.startsWith("/patient")) return patientNavLinks;
   return specialistNavLinks;
 });
 
-const user = computed<SidebarUser>(() => {
-  if (props.user) return props.user;
-  if (route.path.startsWith("/coordinator")) {
-    return {
-      name: "Sarah Mitchell",
-      role: "Referral Coordinator",
-      initials: "SM",
-    };
-  }
-  return {
-    name: "Dr. James Rivera",
-    role: "Cardiologist",
-    initials: "JR",
-  };
+const user = ref<SidebarUser>({
+  name: "",
+  role: "",
+  initials: "",
 });
+const profile = ref<UserProfile | null>(null);
 
-const profile = computed(() => {
-  if (route.path.startsWith("/coordinator")) return mockCoordinatorProfile;
-  return mockProfile;
+onMounted(async () => {
+  const res = await getMe();
+  const data = res.data.data;
+
+  profile.value = {
+    userId: data.userId,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    phone: data.phone,
+    role: data.role,
+    facilityId: data.facilityId,
+    facilityName: data.facilityName,
+    patientId: data.patientId,
+    specialistId: data.specialistId,
+    referralCoordinatorId: data.referralCoordinatorId,
+    adminId: data.adminId,
+  };
+
+  user.value = {
+    name: `${data.firstName} ${data.lastName}`,
+    role: data.role,
+    initials: (data.firstName?.[0] ?? "") + (data.lastName?.[0] ?? ""),
+  };
 });
 </script>
 
@@ -58,6 +67,6 @@ const profile = computed(() => {
     subtitle="Manage your account"
     :notification-count="2"
   >
-    <PersonalInfoCard :profile="profile" />
+    <PersonalInfoCard v-if="profile" :profile="profile" />
   </DashboardLayout>
 </template>

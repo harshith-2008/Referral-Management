@@ -20,7 +20,7 @@ defineProps<{
       <AppNavbar
         :title="title"
         :subtitle="subtitle"
-        :user-initials="user.initials"
+        :user-initials="user?.initials"
         :notification-count="notificationCount"
       />
 

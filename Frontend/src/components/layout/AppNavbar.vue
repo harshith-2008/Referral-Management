@@ -17,7 +17,7 @@ defineProps<{
     </div>
 
     <div class="flex items-center gap-4">
-      <button
+      <!-- <button
         type="button"
         class="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
         aria-label="Notifications"
@@ -37,7 +37,7 @@ defineProps<{
         >
           {{ notificationCount }}
         </span>
-      </button>
+      </button> -->
 
       <div
         class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white"

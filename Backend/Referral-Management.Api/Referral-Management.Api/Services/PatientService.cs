@@ -156,7 +156,7 @@ namespace Referral_Management.Api.Services
                         ReferralStatus = r.ReferralStatus.StatusName,
                         Urgency = r.UrgencyLevel.LevelName,
                         OriginFacility = r.OriginFacility.FacilityName,
-                        DestinationFacility = r.DestinationFacility.FacilityName,
+                        DestinationFacility = r.DestinationFacility != null ? r.DestinationFacility.FacilityName: string.Empty,
                         CreatedAt = System.DateTime.UtcNow
                     }).ToList()
             };
@@ -183,7 +183,7 @@ namespace Referral_Management.Api.Services
                     ReferralStatus = r.ReferralStatus.StatusName,
                     Urgency = r.UrgencyLevel.LevelName,
                     OriginFacility = r.OriginFacility.FacilityName,
-                    DestinationFacility = r.DestinationFacility.FacilityName,
+                    DestinationFacility = r.DestinationFacility != null ? r.DestinationFacility.FacilityName : string.Empty,
                     CreatedAt = System.DateTime.UtcNow
                 })
                 .ToListAsync();
