@@ -1,32 +1,49 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { isAuthenticated, getUserRole } from "../utils/auth";
 
+// Pages
 import Login from "../pages/auth/Login.vue";
+import Unauthorized from "../pages/auth/Unauthorized.vue";
+
 import AdminDashboard from "../pages/admin/AdminDashboard.vue";
+
 import PatientDashboard from "../pages/patient/PatientDashboard.vue";
+import PatientReferrals from "../pages/patient/MyReferrals.vue";
+
 import CoordinatorDashboard from "../pages/referral-coordinator/CoordinatorDashboard.vue";
 import ReferralList from "../pages/referral-coordinator/ReferralList.vue";
+import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
+import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
+
 import SpecialistDashboard from "../pages/specialist/SpecialistDashboard.vue";
 import AssignedReferrals from "../pages/specialist/AssignedReferrals.vue";
 import CreateReferral from "../pages/specialist/CreateReferral.vue";
-import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
-import Unauthorized from "../pages/auth/Unauthorized.vue";
-import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
-import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
 import SpecialistAppointment from "../pages/specialist/SpecialistAppointment.vue";
 import MyReferrals from "../pages/specialist/MyReferrals.vue";
+
+import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
 
   routes: [
-    { path: "/login", component: Login },
-    { path: "/unauthorized", component: Unauthorized },
+    // ================= AUTH =================
+    {
+      path: "/login",
+      component: Login,
+    },
+    {
+      path: "/unauthorized",
+      component: Unauthorized,
+    },
+
+    // ================= ADMIN =================
     {
       path: "/admin",
       component: AdminDashboard,
       meta: {
         requiresAuth: true,
-        roles: ["1"],
+        roles: ["Admin"],
       },
     },
     {
@@ -34,39 +51,25 @@ const router = createRouter({
       component: ProfileSettingsPage,
       meta: {
         requiresAuth: true,
-        roles: ["1"],
+        roles: ["Admin"],
       },
     },
-    {
-      path: "/coordinator",
-      component: CoordinatorDashboard,
-      meta: {
-        requiresAuth: true,
-        roles: ["2"],
-      },
-    },
-    {
-      path: "/coordinator/referrals",
-      component: ReferralList,
-      meta: {
-        requiresAuth: true,
-        roles: ["2"],
-      },
-    },
-    {
-      path: "/coordinator/profile",
-      component: ProfileSettingsPage,
-      meta: {
-        requiresAuth: true,
-        roles: ["2"],
-      },
-    },
+
+    // ================= PATIENT =================
     {
       path: "/patient",
       component: PatientDashboard,
       meta: {
         requiresAuth: true,
-        roles: ["3"],
+        roles: ["Patient"],
+      },
+    },
+    {
+      path: "/patient/referrals",
+      component: PatientReferrals,
+      meta: {
+        requiresAuth: true,
+        roles: ["Patient"],
       },
     },
     {
@@ -74,55 +77,25 @@ const router = createRouter({
       component: ProfileSettingsPage,
       meta: {
         requiresAuth: true,
-        roles: ["3"],
+        roles: ["Patient"],
+      },
+    },
+
+    // ================= COORDINATOR =================
+    {
+      path: "/coordinator",
+      component: CoordinatorDashboard,
+      meta: {
+        requiresAuth: true,
+        roles: ["ReferralCoordinator"],
       },
     },
     {
-      path: "/specialist",
-      component: SpecialistDashboard,
+      path: "/coordinator/referrals",
+      component: ReferralList,
       meta: {
         requiresAuth: true,
-        roles: ["4"],
-      },
-    },
-    {
-      path: "/specialist/appointments",
-      component: SpecialistAppointment,
-      meta: {
-        requiresAuth: true,
-        roles: ["4"],
-      },
-    },
-    {
-      path: "/specialist/my-referrals",
-      component: MyReferrals,
-      meta: {
-        requiresAuth: true,
-        roles: ["4"],
-      },
-    },
-    {
-      path: "/specialist/create-referral",
-      component: CreateReferral,
-      meta: {
-        requiresAuth: true,
-        roles: ["4"],
-      },
-    },
-    {
-      path: "/specialist/referrals",
-      component: AssignedReferrals,
-      meta: {
-        requiresAuth: true,
-        roles: ["4"],
-      },
-    },
-    {
-      path: "/specialist/profile",
-      component: ProfileSettingsPage,
-      meta: {
-        requiresAuth: true,
-        roles: ["4"],
+        roles: ["ReferralCoordinator"],
       },
     },
     {
@@ -130,7 +103,7 @@ const router = createRouter({
       component: IncomingRequests,
       meta: {
         requiresAuth: true,
-        roles: ["4"],
+        roles: ["ReferralCoordinator"],
       },
     },
     {
@@ -138,18 +111,95 @@ const router = createRouter({
       component: RoutingPending,
       meta: {
         requiresAuth: true,
-        roles: ["4"],
+        roles: ["ReferralCoordinator"],
       },
     },
     {
-  path: "/patient/referrals",
-  component: MyReferrals,
-  meta: {
-    requiresAuth: true,
-    roles: ["3"],
-  },
-},
+      path: "/coordinator/profile",
+      component: ProfileSettingsPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["ReferralCoordinator"],
+      },
+    },
+
+    // ================= SPECIALIST =================
+    {
+      path: "/specialist",
+      component: SpecialistDashboard,
+      meta: {
+        requiresAuth: true,
+        roles: ["Specialist"],
+      },
+    },
+    {
+      path: "/specialist/appointments",
+      component: SpecialistAppointment,
+      meta: {
+        requiresAuth: true,
+        roles: ["Specialist"],
+      },
+    },
+    {
+      path: "/specialist/my-referrals",
+      component: MyReferrals,
+      meta: {
+        requiresAuth: true,
+        roles: ["Specialist"],
+      },
+    },
+    {
+      path: "/specialist/create-referral",
+      component: CreateReferral,
+      meta: {
+        requiresAuth: true,
+        roles: ["Specialist"],
+      },
+    },
+    {
+      path: "/specialist/referrals",
+      component: AssignedReferrals,
+      meta: {
+        requiresAuth: true,
+        roles: ["Specialist"],
+      },
+    },
+    {
+      path: "/specialist/profile",
+      component: ProfileSettingsPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["Specialist"],
+      },
+    },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.meta.requiresAuth as boolean;
+  const allowedRoles = to.meta.roles as string[] | undefined;
+
+  const auth = isAuthenticated();
+  const role = getUserRole();
+
+  // 1. Public route → allow
+  if (!requiresAuth) {
+    return next();
+  }
+
+  // 2. Not logged in → login
+  if (!auth) {
+    return next("/login");
+  }
+
+  // 3. Role check
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!role || !allowedRoles.includes(role)) {
+      return next("/unauthorized");
+    }
+  }
+
+  return next();
 });
 
 export default router;
