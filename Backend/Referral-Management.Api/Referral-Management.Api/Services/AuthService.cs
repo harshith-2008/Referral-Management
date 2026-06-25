@@ -161,7 +161,7 @@ public class AuthService : IAuthService
 
         switch (user.RoleId)
         {
-            case 1: // Admin
+            case 4: // Admin
                 {
                     var admin = await _context.Admins
                         .FirstOrDefaultAsync(a => a.UserId == user.UserId);
@@ -190,7 +190,7 @@ public class AuthService : IAuthService
                     break;
                 }
 
-            case 3: // Patient
+            case 1: // Patient
                 {
                     var patient = await _context.Patients
                         .FirstOrDefaultAsync(p => p.UserId == user.UserId);
@@ -205,7 +205,7 @@ public class AuthService : IAuthService
                     break;
                 }
 
-            case 4: // Specialist
+            case 3: // Specialist
                 {
                     var specialist = await _context.Specialists
                         .FirstOrDefaultAsync(s => s.UserId == user.UserId);
