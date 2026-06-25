@@ -7,13 +7,13 @@ export interface StatCardItem {
   subtext?: string;
   iconBg: string;
   iconColor: string;
-  icon: "clipboard" | "clock" | "check" | "calendar" | "archive" | "users" | "x";
+  icon: string;
 }
 
 const props = withDefaults(
   defineProps<{
     items: StatCardItem[];
-    columns?: 5 | 6;
+    columns?: number;
   }>(),
   { columns: 5 },
 );

@@ -12,6 +12,8 @@ import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 import Unauthorized from "../pages/auth/Unauthorized.vue";
 import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
 import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
+import UsersPage from "../pages/admin/UsersPage.vue";
+import ReportsPage from "../pages/admin/ReportsPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -27,6 +29,24 @@ const router = createRouter({
         roles: ["1"],
       },
     },
+    {
+  path: "/admin/reports",
+  component: ReportsPage,
+  meta: {
+    requiresAuth: true,
+    roles: ["1"], // admin role
+  },
+},
+    
+
+{
+  path: "/admin/users",
+  component: UsersPage,
+  meta: {
+    requiresAuth: true,
+    roles: ["1"],
+  },
+},
     {
       path: "/admin/profile",
       component: ProfileSettingsPage,

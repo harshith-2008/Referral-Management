@@ -9,6 +9,15 @@ export interface AdminDashboardDTO {
   appointmentsToday: number;
 }
 
+export interface UserListDTO {
+  userId: number;
+  name: string;
+  email: string;
+  role: string;
+  facility: string;
+}
+
+
 export interface AppointmentAnalyticsDTO {
   totalAppointments: number;
   upcoming: number;
@@ -66,3 +75,28 @@ export interface StatusCountDTO {
   status: string;
   count: number;
 }
+
+export interface MonthlyReferralDTO {
+  year: number;
+  month: number;
+  count: number;
+}
+
+export interface TopSpecialistDTO {
+  specialist: string;
+  referrals: number;
+}
+
+export interface ReferralAgingDTO {
+  lessThan3: number;
+  between3And7: number;
+  moreThan7: number;
+}
+
+export interface ScheduledDelayDTO {
+  totalScheduled: number;
+  delayed: number;
+  healthy: number;
+}
+
+
