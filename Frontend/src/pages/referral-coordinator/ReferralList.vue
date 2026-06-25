@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import CoordinatorReferralsTable from "../../components/coordinator/CoordinatorReferralsTable.vue";
 import ReferralHistoryModal from "../../components/coordinator/ReferralHistoryModal.vue";
+
 import { coordinatorNavLinks } from "../../config/navigation";
-import { mockCoordinatorReferrals } from "../../data/mockCoordinatorReferrals";
-import type { CoordinatorReferral } from "../../types/coordinatorReferral";
+
+import { getOriginFacilityReferrals } from "../../api/referral";
+import { getErrorMessage } from "../../utils/errorHandler";
+
+import type { ReferralDTO } from "../../types/referral";
 
 const user = ref({
   name: "Sarah Mitchell",
@@ -14,16 +19,34 @@ const user = ref({
   initials: "SM",
 });
 
-const referrals = ref<CoordinatorReferral[]>([...mockCoordinatorReferrals]);
-const selectedReferral = ref<CoordinatorReferral | null>(null);
+const referrals = ref<ReferralDTO[]>([]);
+const selectedReferral = ref<ReferralDTO | null>(null);
 
-const openView = (referral: CoordinatorReferral) => {
+const loading = ref(false);
+
+const loadReferrals = async () => {
+  try {
+    loading.value = true;
+
+    const response = await getOriginFacilityReferrals();
+
+    referrals.value = response.data.data;
+  } catch (error) {
+    alert(getErrorMessage(error));
+  } finally {
+    loading.value = false;
+  }
+};
+
+const openView = (referral: ReferralDTO) => {
   selectedReferral.value = referral;
 };
 
 const closeView = () => {
   selectedReferral.value = null;
 };
+
+onMounted(loadReferrals);
 </script>
 
 <template>

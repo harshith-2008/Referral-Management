@@ -31,7 +31,7 @@ const handleLogin = async () => {
 
     switch (response.data.data.roleId) {
       case 1:
-        router.push("/admin");
+        router.push("/patient");
         break;
 
       case 2:
@@ -39,11 +39,11 @@ const handleLogin = async () => {
         break;
 
       case 3:
-        router.push("/patient");
+        router.push("/specialist");
         break;
 
       case 4:
-        router.push("/specialist");
+        router.push("/admin");
         break;
 
       default:

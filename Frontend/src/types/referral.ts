@@ -1,6 +1,7 @@
 export interface FacilityDTO {
   facilityId: number;
   facilityName: string;
+  availableSpecialists: number;
 }
 
 export interface ReferralDTO {
@@ -42,13 +43,13 @@ export interface ReferralDetailDTO {
 }
 
 export interface CreateReferralRequestDTO {
+  referralId: number;
+
   patientId: number;
 
   originFacilityId: number;
 
   destinationFacilityIds: number[];
-
-  createdByCoordinatorId: number;
 
   specialtyRequestId: number;
 

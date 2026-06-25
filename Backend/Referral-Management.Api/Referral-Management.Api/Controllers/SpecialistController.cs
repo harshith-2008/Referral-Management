@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Referral_Management.Api.DTOs;
 using Referral_Management.Api.DTOs.Common;
 using Referral_Management.Api.Services;
@@ -18,36 +19,27 @@ public class SpecialistController : ControllerBase
         _specialistService = specialistService;
     }
 
-    // ✅ GET: api/specialist/assigned-patients/{specialistId}
-    [HttpGet("assigned-patients/{specialistId:int}")]
-    public async Task<IActionResult> GetAssignedPatients(int specialistId)
+    [Authorize(Roles = "Specialist")]
+    [HttpGet("assigned-patients")]
+    public async Task<IActionResult> GetAssignedPatients()
     {
-        if (specialistId <= 0)
-        {
-            return Ok(new ApiResponseDTO<object>
-            {
-                Success = false,
-                Message = "SpecialistId must be a positive integer.",
-                Data = null
-            });
-        }
+        var specialistIdClaim =
+            User.FindFirst("SpecialistId")?.Value;
 
-        var result = await _specialistService.GetAssignedPatients(specialistId);
+        if (string.IsNullOrEmpty(specialistIdClaim))
+            return Unauthorized();
 
-        if (!result.Any())
-        {
-            return Ok(new ApiResponseDTO<List<SpecialistPatientDto>>
-            {
-                Success = true,
-                Message = "No patients assigned to this specialist.",
-                Data = result
-            });
-        }
+        var specialistId = int.Parse(specialistIdClaim);
+
+        var result =
+            await _specialistService.GetAssignedPatients(specialistId);
 
         return Ok(new ApiResponseDTO<List<SpecialistPatientDto>>
         {
             Success = true,
-            Message = "Assigned patients fetched successfully.",
+            Message = result.Any()
+                ? "Assigned patients fetched successfully."
+                : "No patients assigned to this specialist.",
             Data = result
         });
     }
