@@ -21,7 +21,7 @@ namespace Referral_Management.Api.Controllers
         }
 
         [HttpGet("lookup/{mrn}")]
-       /* public async Task<IActionResult> GetPatientForReferral(string mrn)
+        public async Task<IActionResult> GetPatientForReferral(string mrn)
         {
             var result = await _patientService.GetPatientForReferralAsync(mrn);
 
@@ -31,7 +31,7 @@ namespace Referral_Management.Api.Controllers
                 Message = "Patient found",
                 Data = result
             });
-        }*/
+        }
 
         private int GetUserId()
         {
