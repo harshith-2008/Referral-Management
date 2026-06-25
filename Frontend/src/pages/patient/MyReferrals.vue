@@ -152,33 +152,144 @@ onMounted(loadReferrals);
     <!-- ================= MODAL ================= -->
     <div
       v-if="showModal"
-      class="fixed inset-0 bg-gray-900/30 backdrop-blur-sm flex items-center justify-center z-50"
+      class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-6 sm:p-10"
+      @click.self="closeModal"
     >
-      <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">Referral Details</h2>
+      <div class="w-full max-w-lg space-y-4 pb-10">
+        <!-- Header -->
+        <div
+          class="bg-white rounded-2xl shadow-2xl px-6 py-5 flex items-start justify-between gap-4"
+        >
+          <div>
+            <p class="text-xs font-medium text-slate-400 mb-2">
+              Referral Details
+            </p>
 
-        <div v-if="loadingDetails" class="text-center py-6">
-          Loading referral details...
-        </div>
+            <div
+              v-if="loadingDetails"
+              class="h-7 w-40 rounded-lg bg-slate-100 animate-pulse"
+            />
+            <h2
+              v-else
+              class="text-xl font-semibold text-slate-900 leading-tight"
+            >
+              {{ selectedReferral?.specialty ?? "—" }}
+            </h2>
+            <p class="mt-1 text-[12px] text-slate-400">
+              {{
+                selectedReferral
+                  ? new Date(selectedReferral.createdAt).toLocaleString()
+                  : ""
+              }}
+            </p>
+          </div>
 
-        <div v-else-if="selectedReferral" class="space-y-2 text-sm">
-          <p><b>Specialty:</b> {{ selectedReferral.specialty }}</p>
-          <p><b>Status:</b> {{ selectedReferral.referralStatus }}</p>
-          <p><b>Urgency:</b> {{ selectedReferral.urgency }}</p>
-          <p><b>Origin Facility:</b> {{ selectedReferral.originFacility }}</p>
-          <p>
-            <b>Created At:</b>
-            {{ new Date(selectedReferral.createdAt).toLocaleString() }}
-          </p>
-        </div>
-
-        <div class="mt-6 text-right">
           <button
-            class="bg-gray-500 text-white px-4 py-2 rounded"
+            type="button"
+            class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0 mt-1"
             @click="closeModal"
           >
-            Close
+            <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4">
+              <path
+                d="M18 6L6 18M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
           </button>
+        </div>
+
+        <!-- Body -->
+        <div class="bg-white rounded-2xl shadow-xl px-6 py-5">
+          <!-- Loading -->
+          <div v-if="loadingDetails" class="space-y-4">
+            <div v-for="i in 4" :key="i" class="space-y-1.5">
+              <div class="h-2.5 w-16 rounded bg-slate-100 animate-pulse" />
+              <div class="h-4 w-48 rounded bg-slate-100 animate-pulse" />
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div
+            v-else-if="selectedReferral"
+            class="grid grid-cols-2 gap-x-8 gap-y-5"
+          >
+            <div>
+              <p
+                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+              >
+                Specialty
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.specialty }}
+              </p>
+            </div>
+
+            <div>
+              <p
+                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+              >
+                Status
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.referralStatus }}
+              </p>
+            </div>
+
+            <div>
+              <p
+                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+              >
+                Urgency
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.urgency }}
+              </p>
+            </div>
+
+            <div>
+              <p
+                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+              >
+                Origin Facility
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.originFacility }}
+              </p>
+            </div>
+
+            <div class="col-span-2 pt-2 border-t border-slate-100">
+              <p
+                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+              >
+                Created At
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ new Date(selectedReferral.createdAt).toLocaleString() }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Null state -->
+          <div
+            v-else
+            class="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4 mt-0.5 text-red-400 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p class="text-sm text-red-600">Failed to load referral details.</p>
+          </div>
         </div>
       </div>
     </div>
