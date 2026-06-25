@@ -8,9 +8,10 @@ import RecentReferralsTable from "../../components/coordinator/RecentReferralsTa
 import { coordinatorNavLinks } from "../../config/navigation";
 import { getDashboard } from "../../api/coordinator";
 
+import { getErrorMessage } from "../../utils/errorHandler";
+
 import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
 import type { CoordinatorDashboardDTO } from "../../types/coordinator";
-import type { ReferralDTO } from "../../types/referral";
 
 const user = ref({
   name: "Sarah Mitchell",
@@ -20,6 +21,7 @@ const user = ref({
 });
 
 const loading = ref(false);
+const errorMessage = ref("");
 
 const dashboard = ref<CoordinatorDashboardDTO>({
   totalReferrals: 0,
@@ -33,6 +35,7 @@ const dashboard = ref<CoordinatorDashboardDTO>({
 
 const loadDashboard = async () => {
   loading.value = true;
+  errorMessage.value = "";
 
   try {
     const response = await getDashboard();
@@ -40,6 +43,18 @@ const loadDashboard = async () => {
     dashboard.value = response.data.data;
   } catch (error) {
     console.error("Failed to load dashboard", error);
+
+    errorMessage.value = getErrorMessage(error);
+
+    dashboard.value = {
+      totalReferrals: 0,
+      submitted: 0,
+      requested: 0,
+      accepted: 0,
+      rejected: 0,
+      closed: 0,
+      recentReferrals: [],
+    };
   } finally {
     loading.value = false;
   }
@@ -108,7 +123,30 @@ onMounted(loadDashboard);
     :subtitle="`Welcome back, ${user.welcomeName}`"
     :notification-count="2"
   >
-    <div class="space-y-6">
+    <div
+      v-if="loading"
+      class="rounded-xl bg-white p-8 text-center text-slate-500"
+    >
+      Loading dashboard...
+    </div>
+
+    <div
+      v-else-if="errorMessage"
+      class="rounded-xl border border-red-200 bg-red-50 p-6 text-center"
+    >
+      <p class="font-medium text-red-700">
+        {{ errorMessage }}
+      </p>
+
+      <button
+        @click="loadDashboard"
+        class="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+      >
+        Try Again
+      </button>
+    </div>
+
+    <div v-else class="space-y-6">
       <StatsCards :items="stats" :columns="6" />
 
       <RecentReferralsTable

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import axios from "axios";
 
 import { getFacilitiesDropdown, routeReferral } from "../../api/referral";
 
@@ -21,25 +22,35 @@ const selectedFacilities = ref<number[]>([]);
 
 const loadingFacilities = ref(false);
 const submitting = ref(false);
+const facilitiesMessage = ref("");
+const facilitiesError = ref("");
 
 const loadFacilities = async () => {
   loadingFacilities.value = true;
 
+  facilitiesMessage.value = "";
+  facilitiesError.value = "";
+
   try {
     const response = await getFacilitiesDropdown(props.referral.referralId);
 
-    facilities.value = response.data;
+    facilities.value = response.data ?? [];
+
+    if (!facilities.value.length) {
+      facilitiesMessage.value =
+        "No facilities are currently available for this specialty.";
+    }
   } catch (error) {
     console.error("Failed to load facilities:", error);
 
-    // Demo facilities from parent page
-    facilities.value = props.referral.facilities || [];
+    facilities.value = [];
 
-    alert(
-      `Backend unavailable. Showing demo facilities.\n\n${getErrorMessage(
-        error,
-      )}`,
-    );
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      facilitiesMessage.value =
+        "No facilities are currently available for this specialty.";
+    } else {
+      facilitiesError.value = getErrorMessage(error);
+    }
   } finally {
     loadingFacilities.value = false;
   }
@@ -95,11 +106,25 @@ onMounted(loadFacilities);
       </div>
 
       <div v-if="loadingFacilities">Loading facilities...</div>
+      <div
+        v-else-if="facilitiesMessage"
+        class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700"
+      >
+        {{ facilitiesMessage }}
+      </div>
 
       <div
+        v-else-if="facilitiesError"
+        class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      >
+        {{ facilitiesError }}
+      </div>
+
+      <div
+        v-if="facilities.length > 0"
         v-for="facility in facilities"
         :key="facility.facilityId"
-        class="flex items-center justify-between rounded-lg border border-slate-200 p-4 mb-2"
+        class="mb-2 flex items-center justify-between rounded-lg border border-slate-200 p-4"
       >
         <div class="flex items-center gap-3">
           <input
@@ -126,6 +151,7 @@ onMounted(loadFacilities);
         </button>
 
         <button
+          v-if="facilities.length > 0"
           :disabled="submitting"
           class="rounded bg-blue-600 px-4 py-2 text-white"
           @click="submitRouting"

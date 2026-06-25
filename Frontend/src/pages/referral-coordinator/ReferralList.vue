@@ -18,21 +18,26 @@ const user = ref({
   role: "Referral Coordinator",
   initials: "SM",
 });
-
+const errorMessage = ref("");
 const referrals = ref<ReferralDTO[]>([]);
 const selectedReferral = ref<ReferralDTO | null>(null);
 
 const loading = ref(false);
 
 const loadReferrals = async () => {
-  try {
-    loading.value = true;
+  loading.value = true;
+  errorMessage.value = "";
 
+  try {
     const response = await getOriginFacilityReferrals();
 
-    referrals.value = response.data.data;
+    referrals.value = response.data.data ?? [];
   } catch (error) {
-    alert(getErrorMessage(error));
+    console.error("Failed to load referrals:", error);
+
+    errorMessage.value = getErrorMessage(error);
+
+    referrals.value = [];
   } finally {
     loading.value = false;
   }
@@ -56,19 +61,44 @@ onMounted(loadReferrals);
     subtitle="Manage all referrals"
     :notification-count="2"
   >
-    <CoordinatorReferralsTable
-      :referrals="referrals"
-      show-filters
-      show-summary
-      show-actions
-      action-label="View"
-      @view="openView"
-    />
+    <div
+      v-if="loading"
+      class="rounded-xl bg-white p-8 text-center text-slate-500"
+    >
+      Loading referrals...
+    </div>
 
-    <ReferralHistoryModal
-      v-if="selectedReferral"
-      :referral="selectedReferral"
-      @close="closeView"
-    />
+    <div
+      v-else-if="errorMessage"
+      class="rounded-xl border border-red-200 bg-red-50 p-6 text-center"
+    >
+      <p class="font-medium text-red-700">
+        {{ errorMessage }}
+      </p>
+
+      <button
+        @click="loadReferrals"
+        class="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+      >
+        Try Again
+      </button>
+    </div>
+
+    <template v-else>
+      <CoordinatorReferralsTable
+        :referrals="referrals"
+        show-filters
+        show-summary
+        show-actions
+        action-label="View"
+        @view="openView"
+      />
+
+      <ReferralHistoryModal
+        v-if="selectedReferral"
+        :referral="selectedReferral"
+        @close="closeView"
+      />
+    </template>
   </DashboardLayout>
 </template>
