@@ -65,7 +65,6 @@ onMounted(loadAppointments);
 <template>
   <DashboardLayout
     :nav-links="specialistNavLinks"
-    :user="user"
     title="My Appointments"
     subtitle="Manage your daily schedule"
     :notification-count="2"

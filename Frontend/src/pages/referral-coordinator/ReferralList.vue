@@ -52,7 +52,6 @@ onMounted(loadReferrals);
 <template>
   <DashboardLayout
     :nav-links="coordinatorNavLinks"
-    :user="user"
     title="Referral List"
     subtitle="Manage all referrals"
     :notification-count="2"

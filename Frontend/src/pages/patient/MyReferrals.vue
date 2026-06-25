@@ -63,7 +63,6 @@ onMounted(loadReferrals);
 <template>
   <DashboardLayout
     :nav-links="patientNavLinks"
-    :user="user"
     title="My Referrals"
     subtitle="Track all your referrals"
     :notification-count="1"
@@ -75,7 +74,7 @@ onMounted(loadReferrals);
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/50">
               <th
-               class="px-6 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                class="px-6 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Referral ID
               </th>
@@ -114,7 +113,7 @@ onMounted(loadReferrals);
                 </span>
               </td>
 
-              <td class="px-6 py-4 text-sm  text-slate-600">
+              <td class="px-6 py-4 text-sm text-slate-600">
                 {{ referral.specialty }}
               </td>
 
@@ -156,9 +155,7 @@ onMounted(loadReferrals);
       class="fixed inset-0 bg-gray-900/30 backdrop-blur-sm flex items-center justify-center z-50"
     >
       <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">
-          Referral Details
-        </h2>
+        <h2 class="text-xl font-semibold mb-4">Referral Details</h2>
 
         <div v-if="loadingDetails" class="text-center py-6">
           Loading referral details...

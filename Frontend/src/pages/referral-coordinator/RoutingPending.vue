@@ -88,7 +88,6 @@ onMounted(loadReferrals);
 <template>
   <DashboardLayout
     :nav-links="coordinatorNavLinks"
-    :user="user"
     title="Routing Pending"
     subtitle="Route submitted referrals to other facilities"
     :notification-count="2"

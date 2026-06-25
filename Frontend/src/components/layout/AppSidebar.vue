@@ -1,27 +1,57 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+
 import NavIcon from "../icons/NavIcon.vue";
+
 import type { NavLink, SidebarUser } from "../../types/navigation";
-import { logout } from "../../api/authApi.ts";
+
+import { logout, getMe } from "../../api/authApi";
 
 const props = defineProps<{
   navLinks: NavLink[];
-  user: SidebarUser;
 }>();
 
 const route = useRoute();
 const router = useRouter();
+
+const user = ref<SidebarUser>({
+  name: "",
+  role: "",
+  initials: "",
+});
+
 const isActive = (path: string) => {
   if (path === route.path) return true;
   return route.path.startsWith(`${path}/`);
 };
 
-const userInitials = computed(() => props.user.initials);
+const userInitials = computed(() => user.value.initials);
+
+onMounted(async () => {
+  try {
+    const res = await getMe();
+    const data = res.data.data;
+
+    user.value = {
+      name: `${data.firstName} ${data.lastName}`,
+      role: data.role,
+      initials: (data.firstName?.[0] ?? "") + (data.lastName?.[0] ?? ""),
+    };
+  } catch (error) {
+    console.error("Failed to load user profile", error);
+  }
+});
 
 const handleLogout = async () => {
-  await logout();
+  try {
+    await logout();
+  } catch {
+    // ignore API failure
+  }
+
   localStorage.removeItem("token");
+
   router.push("/login");
 };
 </script>
@@ -38,6 +68,7 @@ const handleLogout = async () => {
         >
           <NavIcon name="logo" />
         </div>
+
         <div>
           <p class="text-base font-bold text-slate-900">ReferralHub</p>
           <p class="text-xs text-slate-500">Care Coordination</p>
@@ -54,11 +85,15 @@ const handleLogout = async () => {
           >
             {{ userInitials }}
           </div>
+
           <div class="min-w-0">
             <p class="truncate text-sm font-semibold text-slate-900">
               {{ user.name }}
             </p>
-            <p class="truncate text-xs text-slate-500">{{ user.role }}</p>
+
+            <p class="truncate text-xs text-slate-500">
+              {{ user.role }}
+            </p>
           </div>
         </div>
       </div>
@@ -83,6 +118,7 @@ const handleLogout = async () => {
       </RouterLink>
     </nav>
 
+    <!-- Logout -->
     <div class="border-t border-slate-100 px-4 py-5">
       <button
         type="button"

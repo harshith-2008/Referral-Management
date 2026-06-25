@@ -42,7 +42,6 @@ onMounted(loadReferrals);
 <template>
   <DashboardLayout
     :nav-links="specialistNavLinks"
-    :user="user"
     title="My Referrals"
     subtitle="View all the referrals that you submitted"
     :notification-count="2"

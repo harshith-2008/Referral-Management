@@ -12,9 +12,9 @@ import {
   specialistNavLinks,
 } from "../../config/navigation";
 
+import { getMe } from "../../api/authApi";
 import type { SidebarUser } from "../../types/navigation";
 import type { UserProfile } from "../../types/profile";
-import { getMe } from "../../api/authApi";
 
 const route = useRoute();
 
@@ -62,7 +62,6 @@ onMounted(async () => {
 <template>
   <DashboardLayout
     :nav-links="navLinks"
-    :user="user"
     title="Profile"
     subtitle="Manage your account"
     :notification-count="2"

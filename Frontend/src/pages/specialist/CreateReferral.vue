@@ -151,7 +151,6 @@ onMounted(async () => {
 <template>
   <DashboardLayout
     :nav-links="specialistNavLinks"
-    :user="user"
     title="Create Referral"
     subtitle="Submit a new referral request for coordinator routing"
     :notification-count="2"

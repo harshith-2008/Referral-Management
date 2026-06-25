@@ -15,13 +15,6 @@ import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
 import type { SpecialistPatientDTO } from "../../types/referral";
 import type { AppointmentScheduleDTO } from "../../types/appointment";
 
-const user = ref({
-  name: "Dr. James Rivera",
-  welcomeName: "Dr. Rivera",
-  role: "Cardiologist",
-  initials: "JR",
-});
-
 const loading = ref(false);
 
 const scheduleDate = ref(new Date().toLocaleDateString());
@@ -41,6 +34,7 @@ const loadDashboard = async () => {
     ]);
 
     referrals.value = referralsResponse.data.data ?? [];
+
     scheduleItems.value = scheduleResponse.data.data?.appointments ?? [];
   } catch (error) {
     console.error("Dashboard load failed:", error);
@@ -97,10 +91,10 @@ onMounted(loadDashboard);
 
 <template>
   <DashboardLayout
+    v-if="!loading"
     :nav-links="specialistNavLinks"
-    :user="user"
     title="Dashboard"
-    :subtitle="`Welcome back, ${user.welcomeName}`"
+    subtitle="Manage your assigned referrals and appointments"
     :notification-count="2"
   >
     <div class="space-y-6">
@@ -114,4 +108,6 @@ onMounted(loadDashboard);
       />
     </div>
   </DashboardLayout>
+
+  <div v-else class="p-8 text-center text-slate-500">Loading dashboard...</div>
 </template>

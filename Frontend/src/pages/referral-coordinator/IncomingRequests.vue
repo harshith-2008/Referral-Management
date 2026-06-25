@@ -88,7 +88,6 @@ onMounted(loadRequests);
 
 <template>
   <DashboardLayout
-    :user="user"
     :nav-links="coordinatorNavLinks"
     title="Incoming Requests"
     subtitle="Assign specialists and schedule appointments"

@@ -104,7 +104,6 @@ onMounted(loadDashboard);
 <template>
   <DashboardLayout
     :nav-links="coordinatorNavLinks"
-    :user="user"
     title="Dashboard"
     :subtitle="`Welcome back, ${user.welcomeName}`"
     :notification-count="2"

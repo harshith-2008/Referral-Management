@@ -54,28 +54,47 @@ defineProps<{
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="referrals.length > 0">
           <tr
             v-for="referral in referrals"
             :key="referral.referralId"
             class="border-b border-slate-100 last:border-b-0 transition-colors hover:bg-slate-50"
           >
             <td class="px-6 py-4">
-              <span class="text-sm font-medium text-blue-600">{{
-                referral.referralId
-              }}</span>
+              <span class="text-sm font-medium text-blue-600">
+                {{ referral.referralId }}
+              </span>
             </td>
+
             <td class="px-6 py-4 text-sm font-semibold text-slate-900">
               {{ referral.patientName }}
             </td>
+
             <td class="px-6 py-4">
               <UrgencyBadge :urgency="referral.urgency" />
             </td>
+
             <td class="px-6 py-4 text-sm text-slate-700">
               {{ referral.specialty }}
             </td>
+
             <td class="px-6 py-4 text-sm text-slate-700">
               {{ referral.appointmentDate ?? "Not Scheduled" }}
+            </td>
+          </tr>
+        </tbody>
+
+        <tbody v-else>
+          <tr>
+            <td colspan="5" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center gap-2">
+                <p class="text-base font-medium text-slate-700">
+                  No assigned referrals
+                </p>
+                <p class="text-sm text-slate-500">
+                  Referrals assigned to you will appear here.
+                </p>
+              </div>
             </td>
           </tr>
         </tbody>
