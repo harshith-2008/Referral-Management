@@ -1,28 +1,23 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 
+import type {
+  ReferralDTO,
+  ReferralDetailDTO,
+  SpecialistMatchDTO,
+} from "../../types/referral";
+
 import { getAvailableSlots, createAppointment } from "../../api/appointment";
 
 const props = defineProps<{
-  referral: any;
+  referral: ReferralDTO;
+  details: ReferralDetailDTO;
+  specialists: SpecialistMatchDTO[];
 }>();
 
 const emit = defineEmits<{
   close: [];
 }>();
-
-const specialists = ref([
-  {
-    specialistId: 1,
-    specialistName: "Dr. Sarah Williams",
-    shiftBlock: "Morning",
-  },
-  {
-    specialistId: 2,
-    specialistName: "Dr. James Carter",
-    shiftBlock: "Evening",
-  },
-]);
 
 const selectedSpecialistId = ref<number>();
 const selectedDate = ref("");
@@ -93,13 +88,69 @@ const scheduleAppointment = async () => {
         <button @click="emit('close')">✕</button>
       </div>
 
+      <div class="mb-6 rounded-lg bg-slate-50 p-4">
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span class="font-medium">Patient:</span>
+            {{ details.patientName }}
+          </div>
+
+          <div>
+            <span class="font-medium">MRN:</span>
+            {{ details.mrn }}
+          </div>
+
+          <div>
+            <span class="font-medium">Age:</span>
+            {{ details.age }}
+          </div>
+
+          <div>
+            <span class="font-medium">Gender:</span>
+            {{ details.gender }}
+          </div>
+
+          <div>
+            <span class="font-medium">Specialty:</span>
+            {{ details.specialty }}
+          </div>
+
+          <div>
+            <span class="font-medium">Urgency:</span>
+            {{ details.urgency }}
+          </div>
+
+          <div>
+            <span class="font-medium">Status:</span>
+            {{ details.status }}
+          </div>
+
+          <div>
+            <span class="font-medium">Facility:</span>
+            {{ details.primaryFacility }}
+          </div>
+
+          <div class="col-span-2">
+            <span class="font-medium">Diagnosis:</span>
+            {{ details.diagnosisCode }}
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-if="!props.specialists.length"
+        class="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-700"
+      >
+        No matching specialists found for this referral.
+      </div>
+
       <div class="space-y-4">
         <div>
           <label class="block mb-2"> Specialist </label>
 
           <div class="space-y-2">
             <div
-              v-for="s in specialists"
+              v-for="s in props.specialists"
               :key="s.specialistId"
               class="border rounded p-3 cursor-pointer"
               :class="{

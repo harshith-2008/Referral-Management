@@ -14,6 +14,8 @@ import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue
 import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
 import UsersPage from "../pages/admin/UsersPage.vue";
 import ReportsPage from "../pages/admin/ReportsPage.vue";
+import SpecialistAppointment from "../pages/specialist/SpecialistAppointment.vue";
+import MyReferrals from "../pages/specialist/MyReferrals.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -104,6 +106,22 @@ const router = createRouter({
       },
     },
     {
+      path: "/specialist/appointments",
+      component: SpecialistAppointment,
+      meta: {
+        requiresAuth: true,
+        roles: ["4"],
+      },
+    },
+    {
+      path: "/specialist/my-referrals",
+      component: MyReferrals,
+      meta: {
+        requiresAuth: true,
+        roles: ["4"],
+      },
+    },
+    {
       path: "/specialist/create-referral",
       component: CreateReferral,
       meta: {
@@ -143,6 +161,14 @@ const router = createRouter({
         roles: ["4"],
       },
     },
+    {
+  path: "/patient/referrals",
+  component: MyReferrals,
+  meta: {
+    requiresAuth: true,
+    roles: ["3"],
+  },
+},
   ],
 });
 

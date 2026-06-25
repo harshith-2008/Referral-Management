@@ -113,68 +113,64 @@ namespace Referral_Management.Api.Services
                 Appointments = appointments
             };
         }
-
-        public async Task<AppointmentResponseDTO> CreateAppointmentAsync(CreateAppointmentDTO request)
+        public async Task<AppointmentResponseDTO> CreateAppointmentAsync(
+            CreateAppointmentDTO request,
+            int coordinatorId)
         {
             if (request.AppointmentDate < DateOnly.FromDateTime(DateTime.Now))
-            {
                 throw new BadRequestException("Cannot schedule appointment in the past.");
-            }
 
             var referral = await _context.Referrals
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r =>
-                    r.ReferralId == request.ReferralId);
+                .FirstOrDefaultAsync(r => r.ReferralId == request.ReferralId);
 
             if (referral == null)
-            {
                 throw new BadRequestException("Referral not found.");
-            }
 
             var specialist = await _context.Specialists
                 .Include(s => s.ShiftBlock)
-                .FirstOrDefaultAsync(s =>
-                    s.SpecialistId == request.SpecialistId);
+                .FirstOrDefaultAsync(s => s.SpecialistId == request.SpecialistId);
 
             if (specialist == null)
-            {
                 throw new BadRequestException("Specialist not found.");
-            }
 
             if (!specialist.Status)
-            {
                 throw new BadRequestException("Specialist is inactive.");
-            }
 
             if (specialist.ShiftBlock == null)
-            {
                 throw new BadRequestException("Shift block not assigned.");
-            }
 
-            // Validate slot within shift
             if (request.AppointmentTime < specialist.ShiftBlock.StartTime ||
                 request.AppointmentTime >= specialist.ShiftBlock.EndTime)
             {
                 throw new BadRequestException("Invalid appointment slot.");
             }
 
-            // Validate slot alignment
             if (request.AppointmentTime.Minute != 0)
-            {
                 throw new BadRequestException("Appointments must start on the hour.");
-            }
 
-            // Validate slot availability
-            bool slotBooked = await _context.Appointments
-                .AnyAsync(a =>
-                    a.SpecialistId == request.SpecialistId &&
-                    a.AppointmentDate == request.AppointmentDate &&
-                    a.AppointmentTime == request.AppointmentTime);
+            bool slotBooked = await _context.Appointments.AnyAsync(a =>
+                a.SpecialistId == request.SpecialistId &&
+                a.AppointmentDate == request.AppointmentDate &&
+                a.AppointmentTime == request.AppointmentTime);
 
             if (slotBooked)
-            {
                 throw new BadRequestException("Selected slot is already booked.");
-            }
+
+            var scheduledReferralStatusId = await _context.ReferralStatuses
+                .Where(s => s.StatusName == "Scheduled")
+                .Select(s => s.ReferralStatusId)
+                .FirstOrDefaultAsync();
+
+            if (scheduledReferralStatusId == 0)
+                throw new BadRequestException("Referral status 'Scheduled' not found.");
+
+            var scheduledAppointmentStatusId = await _context.AppointmentStatuses
+                .Where(s => s.StatusName == "Scheduled")
+                .Select(s => s.AppointmentStatusId)
+                .FirstOrDefaultAsync();
+
+            if (scheduledAppointmentStatusId == 0)
+                throw new BadRequestException("Appointment status 'Scheduled' not found.");
 
             var appointment = new Appointment
             {
@@ -183,10 +179,24 @@ namespace Referral_Management.Api.Services
                 SpecialistId = request.SpecialistId,
                 AppointmentDate = request.AppointmentDate,
                 AppointmentTime = request.AppointmentTime,
-                AppointmentStatusId = 1
+                AppointmentStatusId = scheduledAppointmentStatusId
             };
 
             _context.Appointments.Add(appointment);
+
+            var assignment = new ReferralAssignment
+            {
+                ReferralId = referral.ReferralId,
+                AssignedBy = coordinatorId,
+                ToSpecialistId = request.SpecialistId,
+                FromSpecialistId = referral.FromSpecialistId,
+                Reason = "Initial assignment",
+                ReassignedAt = DateTime.UtcNow
+            };
+
+            _context.ReferralAssignments.Add(assignment);
+
+            referral.ReferralStatusId = scheduledReferralStatusId;
 
             await _context.SaveChangesAsync();
 
@@ -196,7 +206,6 @@ namespace Referral_Management.Api.Services
                 Message = "Appointment scheduled successfully."
             };
         }
-
         public async Task<AppointmentDetailsDTO> GetAppointmentDetailsAsync(int appointmentId)
         {
             var appointment = await _context.Appointments

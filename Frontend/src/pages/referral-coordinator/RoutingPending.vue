@@ -2,7 +2,6 @@
 import { onMounted, ref } from "vue";
 
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
-import CoordinatorReferralsTable from "../../components/coordinator/CoordinatorReferralsTable.vue";
 import RouteReferralModal from "../../components/coordinator/RouteReferralModal.vue";
 
 import { coordinatorNavLinks } from "../../config/navigation";
@@ -48,9 +47,7 @@ const loadReferrals = async () => {
   loading.value = true;
 
   try {
-    const coordinatorId = 1;
-
-    const response = await getSubmittedPendingReferrals(coordinatorId);
+    const response = await getSubmittedPendingReferrals();
 
     referrals.value = response.data.data;
   } catch (error) {

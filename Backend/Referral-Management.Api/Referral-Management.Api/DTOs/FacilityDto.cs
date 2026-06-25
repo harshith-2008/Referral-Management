@@ -5,5 +5,7 @@
     {
         public int FacilityId { get; set; }
         public string FacilityName { get; set; } = string.Empty;
+
+        public int? AvailableSpecialists { get; set; }
     }
 }

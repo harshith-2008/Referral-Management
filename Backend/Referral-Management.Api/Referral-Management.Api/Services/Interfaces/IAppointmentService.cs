@@ -6,7 +6,7 @@
 
         Task<DailyScheduleResponseDTO> GetScheduleAsync(int specialistId, DateOnly date);
 
-        Task<AppointmentResponseDTO> CreateAppointmentAsync(CreateAppointmentDTO request);
+        Task<AppointmentResponseDTO> CreateAppointmentAsync(CreateAppointmentDTO request, int coordinatorId);
 
         Task<AppointmentDetailsDTO> GetAppointmentDetailsAsync(int appointmentId);
 
