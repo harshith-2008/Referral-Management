@@ -11,11 +11,16 @@ import { specialistNavLinks } from "../../config/navigation";
 import { getAssignedPatients } from "../../api/specialist";
 import { getSchedule } from "../../api/appointment";
 
+import { getErrorMessage } from "../../utils/errorHandler";
+
 import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
 import type { SpecialistPatientDTO } from "../../types/referral";
 import type { AppointmentScheduleDTO } from "../../types/appointment";
 
 const loading = ref(false);
+
+const errorMessage = ref("");
+const infoMessage = ref("");
 
 const scheduleDate = ref(new Date().toLocaleDateString());
 
@@ -25,22 +30,52 @@ const scheduleItems = ref<AppointmentScheduleDTO[]>([]);
 const loadDashboard = async () => {
   loading.value = true;
 
+  errorMessage.value = "";
+  infoMessage.value = "";
+
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    const [referralsResponse, scheduleResponse] = await Promise.all([
+    const results = await Promise.allSettled([
       getAssignedPatients(),
       getSchedule(today),
     ]);
 
-    referrals.value = referralsResponse.data.data ?? [];
+    const referralsResult = results[0];
+    const scheduleResult = results[1];
 
-    scheduleItems.value = scheduleResponse.data.data?.appointments ?? [];
+    // Referrals
+    if (referralsResult.status === "fulfilled") {
+      referrals.value = referralsResult.value.data.data ?? [];
+    } else {
+      referrals.value = [];
+
+      errorMessage.value = getErrorMessage(referralsResult.reason);
+    }
+
+    // Schedule
+    if (scheduleResult.status === "fulfilled") {
+      scheduleItems.value = scheduleResult.value.data.data?.appointments ?? [];
+    } else {
+      scheduleItems.value = [];
+
+      errorMessage.value =
+        errorMessage.value || getErrorMessage(scheduleResult.reason);
+    }
+
+    if (
+      referrals.value.length === 0 &&
+      scheduleItems.value.length === 0 &&
+      !errorMessage.value
+    ) {
+      infoMessage.value =
+        "No referrals or appointments are available at the moment.";
+    }
   } catch (error) {
-    console.error("Dashboard load failed:", error);
-
     referrals.value = [];
     scheduleItems.value = [];
+
+    errorMessage.value = getErrorMessage(error);
   } finally {
     loading.value = false;
   }
@@ -91,23 +126,43 @@ onMounted(loadDashboard);
 
 <template>
   <DashboardLayout
-    v-if="!loading"
     :nav-links="specialistNavLinks"
     title="Dashboard"
     subtitle="Manage your assigned referrals and appointments"
     :notification-count="2"
   >
     <div class="space-y-6">
-      <StatsCards :items="stats" />
+      <div
+        v-if="errorMessage"
+        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        {{ errorMessage }}
+      </div>
 
-      <TodaySchedule :date-label="scheduleDate" :items="scheduleItems" />
+      <div
+        v-if="infoMessage"
+        class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700"
+      >
+        {{ infoMessage }}
+      </div>
 
-      <AssignedReferralsTable
-        :referrals="referrals"
-        view-all-link="/specialist/appointments"
-      />
+      <div
+        v-if="loading"
+        class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500"
+      >
+        Loading dashboard...
+      </div>
+
+      <template v-else>
+        <StatsCards :items="stats" />
+
+        <TodaySchedule :date-label="scheduleDate" :items="scheduleItems" />
+
+        <AssignedReferralsTable
+          :referrals="referrals"
+          view-all-link="/specialist/appointments"
+        />
+      </template>
     </div>
   </DashboardLayout>
-
-  <div v-else class="p-8 text-center text-slate-500">Loading dashboard...</div>
 </template>

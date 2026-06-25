@@ -16,6 +16,7 @@ import { getUrgencyLevels } from "../../api/specialist.ts";
 import { getSpecialities } from "../../api/specialist.ts";
 import { getPatientByMrn } from "../../api/patient.ts";
 import { createReferralIntake } from "../../api/specialist.ts";
+import axios from "axios";
 
 const user = ref({
   name: "Dr. James Rivera",
@@ -33,6 +34,12 @@ const patient = ref<PatientLookupDTO | null>(null);
 
 const urgencyLevels = ref<GetUrgencyLevelDTO[]>([]);
 const specialities = ref<GetSpecialityDTO[]>([]);
+
+const searchError = ref("");
+const searchSuccess = ref("");
+
+const referralError = ref("");
+const referralSuccess = ref("");
 
 const form = reactive<ReferralIntakeCreateDTO>({
   patientId: 0,
@@ -71,8 +78,11 @@ const loadSpecialities = async () => {
 };
 
 const searchPatient = async () => {
+  searchError.value = "";
+  searchSuccess.value = "";
+
   if (!mrn.value.trim()) {
-    alert("Please enter an MRN.");
+    searchError.value = "Please enter an MRN.";
     return;
   }
 
@@ -84,14 +94,10 @@ const searchPatient = async () => {
     patient.value = response.data.data;
 
     form.patientId = patient.value.patientId;
+
+    searchSuccess.value = "Patient found successfully.";
   } catch (error) {
-    console.error("Patient lookup failed:", error);
-
-    patient.value = null;
-    form.patientId = 0;
-    console.log(error);
-
-    alert(getErrorMessage(error));
+    searchError.value = getErrorMessage(error);
   } finally {
     searching.value = false;
   }
@@ -99,7 +105,7 @@ const searchPatient = async () => {
 
 const createReferral = async () => {
   if (!patient.value) {
-    alert("Please search for a patient first.");
+    referralError.value = "Please search for a patient first.";
     return;
   }
 
@@ -108,20 +114,21 @@ const createReferral = async () => {
     !form.urgencyLevelId ||
     !form.referralReason.trim()
   ) {
-    alert("Please complete all required fields.");
+    referralError.value = "Please complete all required fields.";
     return;
   }
+
+  submitting.value = true;
+
+  referralError.value = "";
+  referralSuccess.value = "";
 
   submitting.value = true;
 
   try {
     const response = await createReferralIntake(form);
 
-    console.log("Referral Id:", response.data.data);
-    console.log("Message:", response.data.message);
-    console.log("Referral created:", response.data);
-
-    alert(response.data.message);
+    referralSuccess.value = response.data.message;
 
     form.patientId = patient.value.patientId;
     form.referralReason = "";
@@ -129,9 +136,7 @@ const createReferral = async () => {
     form.urgencyLevelId = 0;
     form.specialtyRequestId = 0;
   } catch (error) {
-    console.error("Referral creation failed:", error);
-
-    alert(getErrorMessage(error));
+    referralError.value = getErrorMessage(error);
   } finally {
     submitting.value = false;
   }
@@ -178,6 +183,19 @@ onMounted(async () => {
           >
             {{ searching ? "Searching..." : "Search Patient" }}
           </button>
+        </div>
+        <div
+          v-if="searchError"
+          class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {{ searchError }}
+        </div>
+
+        <div
+          v-if="searchSuccess"
+          class="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+        >
+          {{ searchSuccess }}
         </div>
       </div>
 
@@ -319,7 +337,19 @@ onMounted(async () => {
             />
           </div>
         </div>
+        <div
+          v-if="referralError"
+          class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {{ referralError }}
+        </div>
 
+        <div
+          v-if="referralSuccess"
+          class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+        >
+          {{ referralSuccess }}
+        </div>
         <div class="mt-8 flex justify-end">
           <button
             @click="createReferral"
@@ -333,4 +363,3 @@ onMounted(async () => {
     </div>
   </DashboardLayout>
 </template>
-```
