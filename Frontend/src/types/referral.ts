@@ -2,6 +2,17 @@ export interface FacilityDTO {
   facilityId: number;
   facilityName: string;
   availableSpecialists: number;
+  hospitalId: number;
+  hospitalName: string;
+  inNetwork: boolean;
+  city?: string | null;
+  state?: string | null;
+  distanceKm?: number | null;
+}
+
+export interface FacilitiesDropdownResponseDTO {
+  inNetwork: FacilityDTO[];
+  outOfNetwork: FacilityDTO[];
 }
 
 export interface ReferralDTO {

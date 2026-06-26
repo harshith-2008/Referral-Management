@@ -110,40 +110,58 @@ public class ReferralController : ControllerBase
         });
     }
     // Endpoint for dropdown list
+    [Authorize]
     [HttpGet("{referralId}/facilities-dropdown")]
     public async Task<IActionResult> GetFacilitiesDropdown(int referralId)
     {
-        var facilities = await _referralService.GetFacilitiesForReferralDropdownAsync(referralId);
+        var coordinatorIdClaim = User.FindFirst("ReferralCoordinatorId")?.Value;
 
-        if (facilities == null || !facilities.Any())
-            return NotFound("No facilities found for this referral");
+        if (!int.TryParse(coordinatorIdClaim, out var coordinatorId))
+            return Unauthorized();
 
-        return Ok(facilities);
+        var facilitiesResponse = await _referralService
+            .GetFacilitiesForReferralDropdownAsync(referralId, coordinatorId);
+
+        var hasAny = (facilitiesResponse.InNetwork != null && facilitiesResponse.InNetwork.Any())
+                     || (facilitiesResponse.OutOfNetwork != null && facilitiesResponse.OutOfNetwork.Any());
+
+        if (!hasAny)
+            return NotFound(new ApiResponseDTO<object>
+            {
+                Success = false,
+                Message = "No facilities found for this referral.",
+                Data = null
+            });
+
+        return Ok(new ApiResponseDTO<FacilitiesDropdownResponseDto>
+        {
+            Success = true,
+            Message = "Facilities fetched successfully. Response contains 'InNetwork' and 'OutOfNetwork' lists.",
+            Data = facilitiesResponse
+        });
     }
 
     [Authorize]
     [HttpPost("route")]
-    public async Task<IActionResult> RouteReferral(
-        [FromBody] CreateReferralRequest request)
+    public async Task<IActionResult> RouteReferral([FromBody] CreateReferralRequest request)
     {
-        var coordinatorIdClaim =
-            User.FindFirst("ReferralCoordinatorId")?.Value;
-
-        Console.WriteLine($"Coordinator Claim: {coordinatorIdClaim}");
+        var coordinatorIdClaim = User.FindFirst("ReferralCoordinatorId")?.Value;
 
         if (string.IsNullOrEmpty(coordinatorIdClaim))
             return Unauthorized();
 
         var coordinatorId = int.Parse(coordinatorIdClaim);
 
-        Console.WriteLine(request.CreatedByCoordinatorId);
-
         request.CreatedByCoordinatorId = coordinatorId;
 
-        var referrals =
-            await _referralService.RouteReferralAsync(request);
+        var referrals = await _referralService.RouteReferralAsync(request);
 
-        return Ok(referrals);
+        return Ok(new ApiResponseDTO<List<ReferralDto>>
+        {
+            Success = true,
+            Message = "Referral(s) routed successfully.",
+            Data = referrals
+        });
     }
 
     [HttpGet("submitted")]
