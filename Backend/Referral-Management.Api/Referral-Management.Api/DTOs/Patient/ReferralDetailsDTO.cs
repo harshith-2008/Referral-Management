@@ -19,5 +19,17 @@
         public string DestinationFacility { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
+
+        public int? AppointmentId { get; set; }
+
+        public DateOnly? AppointmentDate { get; set; }
+
+        public TimeOnly? AppointmentTime { get; set; }
+
+        public string? AppointmentStatus { get; set; }
+
+        public string? SpecialistName { get; set; }
+
+        public string? SpecialistFacility { get; set; }
     }
 }

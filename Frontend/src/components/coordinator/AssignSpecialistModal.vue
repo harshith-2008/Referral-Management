@@ -17,6 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
+  success: [];
 }>();
 
 const errorMessage = ref("");
@@ -87,7 +88,7 @@ const scheduleAppointment = async () => {
       appointmentTime: selectedSlot.value,
     });
 
-    emit("close");
+    emit("success");
   } catch (error: any) {
     errorMessage.value =
       error?.response?.data?.message ?? "Unable to schedule appointment.";

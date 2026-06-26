@@ -99,6 +99,11 @@ const closeModal = () => {
   modalError.value = "";
 };
 
+const handleAppointmentSuccess = async () => {
+  closeModal();
+  await loadRequests();
+};
+
 onMounted(loadRequests);
 </script>
 
@@ -127,6 +132,7 @@ onMounted(loadRequests);
       :details="referralDetails"
       :specialists="specialists"
       @close="closeModal"
+      @success="handleAppointmentSuccess"
     />
   </DashboardLayout>
 </template>

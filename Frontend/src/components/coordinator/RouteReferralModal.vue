@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import axios from "axios";
 
 import { getFacilitiesDropdown, routeReferral } from "../../api/referral";
 
-import type { FacilityDTO } from "../../types/referral";
+import type { FacilitiesDropdownResponseDTO } from "../../types/referral";
 
 import { getErrorMessage } from "../../utils/errorHandler";
 
@@ -17,8 +17,44 @@ const emit = defineEmits<{
   success: [];
 }>();
 
-const facilities = ref<FacilityDTO[]>([]);
+const facilities = ref<FacilitiesDropdownResponseDTO>({
+  inNetwork: [],
+  outOfNetwork: [],
+});
 const selectedFacilities = ref<number[]>([]);
+
+const allFacilities = computed(() => [
+  ...facilities.value.inNetwork,
+  ...facilities.value.outOfNetwork,
+]);
+
+const facilityGroups = computed(() => [
+  {
+    key: "in-network",
+    title: "In network",
+    description: "Facilities within the origin hospital network",
+    facilities: facilities.value.inNetwork,
+    badgeClass: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  },
+  {
+    key: "out-of-network",
+    title: "Out of network",
+    description: "Facilities at other hospitals",
+    facilities: facilities.value.outOfNetwork,
+    badgeClass: "bg-amber-50 text-amber-700 ring-amber-200",
+  },
+].filter((group) => group.facilities.length));
+
+const toggleFacility = (facilityId: number) => {
+  const selectedIndex = selectedFacilities.value.indexOf(facilityId);
+
+  if (selectedIndex >= 0) {
+    selectedFacilities.value.splice(selectedIndex, 1);
+    return;
+  }
+
+  selectedFacilities.value.push(facilityId);
+};
 
 const loadingFacilities = ref(false);
 const submitting = ref(false);
@@ -34,16 +70,19 @@ const loadFacilities = async () => {
   try {
     const response = await getFacilitiesDropdown(props.referral.referralId);
 
-    facilities.value = response.data ?? [];
+    facilities.value = response.data.data ?? {
+      inNetwork: [],
+      outOfNetwork: [],
+    };
 
-    if (!facilities.value.length) {
+    if (!allFacilities.value.length) {
       facilitiesMessage.value =
         "No facilities are currently available for this specialty.";
     }
   } catch (error) {
     console.error("Failed to load facilities:", error);
 
-    facilities.value = [];
+    facilities.value = { inNetwork: [], outOfNetwork: [] };
 
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       facilitiesMessage.value =
@@ -82,8 +121,6 @@ const submitRouting = async () => {
 
       destinationFacilityIds: selectedFacilities.value,
     });
-
-    alert("Referral routed successfully.");
 
     emit("success");
   } catch (error) {
@@ -209,30 +246,40 @@ onMounted(loadFacilities);
         </div>
 
         <!-- Facility list -->
-        <template v-if="facilities.length > 0">
+        <template v-if="allFacilities.length > 0">
           <p
             class="text-xs font-medium tracking-widest text-slate-400 uppercase mb-1"
           >
             Select Destinations
           </p>
-          <button
-            v-for="facility in facilities"
-            :key="facility.facilityId"
-            class="w-full text-left flex items-center gap-4 rounded-xl border px-4 py-3 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            :class="
-              selectedFacilities.includes(facility.facilityId)
-                ? 'border-blue-500 bg-blue-50 shadow-sm'
-                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-            "
-            @click="
-              selectedFacilities.includes(facility.facilityId)
-                ? selectedFacilities.splice(
-                    selectedFacilities.indexOf(facility.facilityId),
-                    1,
-                  )
-                : selectedFacilities.push(facility.facilityId)
-            "
+          <section
+            v-for="group in facilityGroups"
+            :key="group.key"
+            class="space-y-2"
           >
+            <div class="flex items-start justify-between gap-3 pt-2">
+              <div>
+                <h3 class="text-sm font-semibold text-slate-800">{{ group.title }}</h3>
+                <p class="text-xs text-slate-400">{{ group.description }}</p>
+              </div>
+              <span
+                class="rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                :class="group.badgeClass"
+              >
+                {{ group.facilities.length }} available
+              </span>
+            </div>
+            <button
+              v-for="facility in group.facilities"
+              :key="facility.facilityId"
+              class="w-full text-left flex items-center gap-4 rounded-xl border px-4 py-3 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              :class="
+                selectedFacilities.includes(facility.facilityId)
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+              "
+              @click="toggleFacility(facility.facilityId)"
+            >
             <!-- Icon -->
             <div
               class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors"
@@ -264,14 +311,23 @@ onMounted(loadFacilities);
             </div>
 
             <!-- Info -->
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-slate-900 truncate">
-                {{ facility.facilityName }}
-              </p>
-              <p class="text-xs text-slate-400">
-                {{ facility.availableSpecialists }} specialists available
-              </p>
-            </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-900 truncate">
+                  {{ facility.facilityName }}
+                </p>
+                <p class="text-xs text-slate-400">
+                  {{ facility.hospitalName }}<span v-if="facility.city || facility.state"> · {{ [facility.city, facility.state].filter(Boolean).join(', ') }}</span>
+                </p>
+                <p class="text-xs text-slate-400">
+                  {{ facility.availableSpecialists }} specialists available
+                </p>
+              </div>
+
+              <span
+                class="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+              >
+                {{ facility.distanceKm == null ? "Distance unavailable" : `${facility.distanceKm.toFixed(1)} km away` }}
+              </span>
 
             <!-- Checkbox -->
             <div
@@ -298,7 +354,8 @@ onMounted(loadFacilities);
                 />
               </svg>
             </div>
-          </button>
+            </button>
+          </section>
         </template>
       </div>
 
@@ -323,7 +380,7 @@ onMounted(loadFacilities);
           </button>
 
           <button
-            v-if="facilities.length > 0"
+            v-if="allFacilities.length > 0"
             :disabled="submitting || !selectedFacilities.length"
             class="px-5 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             @click="submitRouting"
