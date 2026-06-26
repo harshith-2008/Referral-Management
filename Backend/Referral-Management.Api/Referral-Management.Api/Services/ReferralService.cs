@@ -472,7 +472,7 @@ public class ReferralService : IReferralService
 
         var facilityId = coordinator.FacilityId;
 
-        return await _context.Referrals
+        var referrals = await _context.Referrals
             .AsNoTracking()
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
@@ -509,16 +509,18 @@ public class ReferralService : IReferralService
                 DiagnosisCode =
                     r.DiagnosisCode,
 
-                CreatedAt =
-                    r.CreatedAt ?? DateTime.UtcNow
+                CreatedAt = r.CreatedAt ?? DateTime.UtcNow,
+                ReferralGroupId = r.ReferralGroupId
             })
             .ToListAsync();
+
+        return GroupReferralRows(referrals);
     }
 
     public async Task<List<ReferralDto>>
-GetReferralsRaisedBySpecialistAsync(int specialistId)
+    GetReferralsRaisedBySpecialistAsync(int specialistId)
     {
-        return await _context.Referrals
+        var referrals = await _context.Referrals
             .AsNoTracking()
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
@@ -555,10 +557,31 @@ GetReferralsRaisedBySpecialistAsync(int specialistId)
                 DiagnosisCode =
                     r.DiagnosisCode,
 
-                CreatedAt =
-                    r.CreatedAt ?? DateTime.UtcNow
+                CreatedAt = r.CreatedAt ?? DateTime.UtcNow,
+                ReferralGroupId = r.ReferralGroupId
             })
             .ToListAsync();
+
+        return GroupReferralRows(referrals);
+    }
+
+    private static List<ReferralDto> GroupReferralRows(IEnumerable<ReferralDto> referrals)
+    {
+        return referrals
+            .GroupBy(referral => referral.ReferralGroupId?.ToString() ?? $"single-{referral.ReferralId}")
+            .Select(group =>
+            {
+                var representative = group
+                    .OrderByDescending(referral => referral.Status == "Accepted")
+                    .ThenByDescending(referral => referral.Status == "Requested")
+                    .ThenByDescending(referral => referral.CreatedAt)
+                    .First();
+
+                representative.DestinationCount = group.Count();
+                return representative;
+            })
+            .OrderByDescending(referral => referral.CreatedAt)
+            .ToList();
     }
 
 }

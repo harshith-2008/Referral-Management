@@ -30,6 +30,9 @@ export interface ReferralDTO {
   diagnosisCode?: string;
 
   createdAt: string;
+
+  referralGroupId?: string | null;
+  destinationCount?: number;
 }
 
 export interface ReferralDetailDTO {

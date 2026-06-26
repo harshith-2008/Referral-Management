@@ -12,4 +12,5 @@ public class ReferralDto
     public string? DiagnosisCode { get; set; }
     public DateTime CreatedAt { get; set; }
     public Guid? ReferralGroupId { get; set; }
+    public int DestinationCount { get; set; } = 1;
 }
