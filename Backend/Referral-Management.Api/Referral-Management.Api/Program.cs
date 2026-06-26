@@ -1,54 +1,72 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Referral_Management.Api.Extensions;
-using Referral_Management.Api.Middleware;
-using Referral_Management.Api.Models;
-using Referral_Management.Api.Services;
-using Referral_Management.Api.Services.Implementations;
-using Referral_Management.Api.Services.Interfaces;
+﻿using Referral_Management.Api.Extensions;
 using Serilog;
-using System.Text;
-using Referral_Management.Api.Extensions;
+using Referral_Management.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Configure Serilog
+// ✅ SERILOG
 Log.Logger = new LoggerConfiguration()
     .WriteTo.File(
         path: "Extensions/Logs/log-.txt",
         rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7 // keep last 7 days
+        retainedFileCountLimit: 7
     )
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-//Dependency injection file
+// ✅ SERVICES
 builder.Services.AddApplicationServices(builder.Configuration);
+
+// ✅ SIGNALR
+builder.Services.AddSignalR();
+
+// ✅ CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("VuePolicy", policy =>
+        policy
+            .SetIsOriginAllowed(_ => true)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ✅ SWAGGER
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// ❌ KEEP THIS DISABLED FOR SIGNALR DEBUG
+// app.UseMiddleware<ExceptionMiddleware>();
 
-app.UseMiddleware<ExceptionMiddleware>();
-
+// ✅ HTTPS
 app.UseHttpsRedirection();
 
+// ✅ ✅ ✅ CRITICAL FIX → STATIC FILES MUST COME EARLY
+app.UseStaticFiles();   // ⭐ THIS FIXES YOUR 404
+
+// ✅ CORS
 app.UseCors("VuePolicy");
 
+// ✅ AUTH
 app.UseAuthentication();
-
 app.UseAuthorization();
 
+// ✅ CONTROLLERS
 app.MapControllers();
 
+// ✅ SIGNALR HUB
+app.MapHub<NotificationHub>("/hubs/notification");
+
+// ✅ RUN
 app.Run();

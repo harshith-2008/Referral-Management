@@ -5,6 +5,8 @@ import { onMounted, reactive, ref } from "vue";
 import { getErrorMessage } from "../../utils/errorHandler";
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import { specialistNavLinks } from "../../config/navigation";
+import { startSignalR, listenToEvents } from "../../services/signalr";
+
 
 import type {
   GetSpecialityDTO,
@@ -12,10 +14,8 @@ import type {
   ReferralIntakeCreateDTO,
 } from "../../types/specialist.ts";
 import type { PatientLookupDTO } from "../../types/patient";
-import { getUrgencyLevels } from "../../api/specialist.ts";
-import { getSpecialities } from "../../api/specialist.ts";
-import { getPatientByMrn } from "../../api/patient.ts";
-import { createReferralIntake } from "../../api/specialist.ts";
+import { getUrgencyLevels,  getSpecialities, createReferralIntake } from "../../api/specialist";
+import { getPatientByMrn } from "../../api/patient";
 import axios from "axios";
 
 const user = ref({
@@ -141,12 +141,23 @@ const createReferral = async () => {
     submitting.value = false;
   }
 };
-
 onMounted(async () => {
   loadingDropdowns.value = true;
 
   try {
     await Promise.all([loadUrgencies(), loadSpecialities()]);
+
+    // ✅ START SIGNALR
+    await startSignalR();
+
+    // ✅ LISTEN EVENTS
+    listenToEvents((data: any) => {
+      console.log("📩 Real-time event:", data);
+
+      // ✅ Show UI notification
+      referralSuccess.value = data.message || "New update received";
+    });
+
   } finally {
     loadingDropdowns.value = false;
   }

@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Test</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+</head>
+<body>
+
+    <h2>SignalR Test</h2>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:7275/hubs/notification")
+            .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        // ✅ ALL EVENT LISTENERS
+
+        connection.on("ReferralCreated", data => {
+            console.log("📩 ReferralCreated:", JSON.stringify(data));
+        });
+
+        connection.on("ReferralRouted", data => {
+            console.log("📩 ReferralRouted:", JSON.stringify(data));
+        });
+
+        connection.on("StatusUpdated", data => {
+            console.log("📩 StatusUpdated:", JSON.stringify(data));
+        });
+
+        connection.on("AppointmentScheduled", data => {
+            console.log("📩 AppointmentScheduled:", JSON.stringify(data));
+        });
+
+        connection.on("AppointmentStatusUpdated", data => {
+            console.log("📩 AppointmentStatusUpdated:", JSON.stringify(data));
+        });
+
+        // ✅ CONNECTION EVENTS
+
+        connection.onreconnecting(() => {
+            console.log("⚠️ Reconnecting...");
+        });
+
+        connection.onreconnected(() => {
+            console.log("✅ Reconnected");
+        });
+
+        connection.onclose(err => {
+            console.log("❌ Connection closed:", err);
+        });
+
+        async function start() {
+            try {
+                await connection.start();
+                console.log("✅ Connected ✅");
+
+                // ✅ JOIN ALL REQUIRED GROUPS
+
+                await connection.invoke("AddToGroup", "Facility_1_Coordinators");
+                await connection.invoke("AddToGroup", "Facility_2_Coordinators");
+
+
+                await connection.invoke("AddToGroup", "Patient_1");
+              
+                
+
+                await connection.invoke("AddToGroup", "Specialist_1");
+                await connection.invoke("AddToGroup", "Specialist_2");
+                await connection.invoke("AddToGroup", "Specialist_6");
+
+
+                console.log("✅ Joined all groups ✅");
+
+            } catch (err) {
+                console.error("❌ Start failed:", err);
+            }
+        }
+
+        start();
+    </script>
+
+</body>
+</html>

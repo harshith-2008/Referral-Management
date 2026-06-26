@@ -19,15 +19,12 @@ import SpecialistDashboard from "../pages/specialist/SpecialistDashboard.vue";
 import AssignedReferrals from "../pages/specialist/AssignedReferrals.vue";
 import CreateReferral from "../pages/specialist/CreateReferral.vue";
 import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
-import Unauthorized from "../pages/auth/Unauthorized.vue";
-import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
-import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
 import UsersPage from "../pages/admin/UsersPage.vue";
 import ReportsPage from "../pages/admin/ReportsPage.vue";
 import SpecialistAppointment from "../pages/specialist/SpecialistAppointment.vue";
 import MyReferrals from "../pages/specialist/MyReferrals.vue";
 
-import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
+//import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -57,7 +54,7 @@ const router = createRouter({
   component: ReportsPage,
   meta: {
     requiresAuth: true,
-    roles: ["1"], // admin role
+    roles: ["Admin"], // admin role
   },
 },
     
@@ -67,7 +64,7 @@ const router = createRouter({
   component: UsersPage,
   meta: {
     requiresAuth: true,
-    roles: ["1"],
+    roles: ["Admin"],
   },
 },
     {

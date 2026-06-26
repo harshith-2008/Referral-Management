@@ -4,16 +4,20 @@ using Referral_Management.Api.Exceptions;
 using Referral_Management.Api.Models;
 using Referral_Management.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using Referral_Management.Api.Hubs;
 
 namespace Referral_Management.Api.Services;
 
 public class SpecialistService : ISpecialistService
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<NotificationHub> _hub;
 
-    public SpecialistService(AppDbContext context)
+    public SpecialistService(AppDbContext context, IHubContext<NotificationHub> hub)
     {
         _context = context;
+        _hub = hub;
     }
 
     public async Task<List<SpecialistPatientDto>> GetAssignedPatients(int specialistId)
@@ -80,44 +84,84 @@ public class SpecialistService : ISpecialistService
     }
 
     public async Task<int> CreateDraftReferral(
-        int specialistId,
-        ReferralIntakeCreateDto dto)
+    int specialistId,
+    ReferralIntakeCreateDto dto)
     {
-        var patient = await _context.Patients
-            .FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
-
-        if (patient == null)
-            throw new NotFoundException("Patient not found");
-
-        var requestedStatusId = await _context.ReferralStatuses
-            .Where(rs => rs.StatusName == "Submitted")
-            .Select(rs => rs.ReferralStatusId)
-            .FirstAsync();
-
-        var referral = new Referral
+        try
         {
-            PatientId = dto.PatientId,
-            FromSpecialistId = specialistId,
-            ReferralReason = dto.ReferralReason,
-            DiagnosisCode = dto.DiagnosisCode,
-            UrgencyLevelId = dto.UrgencyLevelId,
-            SpecialtyRequestId = dto.SpecialtyRequestId,
+            Console.WriteLine("👉 Creating referral...");
 
-            // Derived from patient
-            OriginFacilityId = patient.PrimaryFacilityId,
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
 
-            // Status
-            ReferralStatusId = requestedStatusId,
+            if (patient == null)
+                throw new NotFoundException("Patient not found");
 
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            var requestedStatusId = await _context.ReferralStatuses
+                .Where(rs => rs.StatusName == "Submitted")
+                .Select(rs => rs.ReferralStatusId)
+                .FirstOrDefaultAsync();
+
+            if (requestedStatusId == 0)
+                throw new Exception("Submitted status not found");
+
+            var referral = new Referral
+            {
+                PatientId = dto.PatientId,
+                FromSpecialistId = specialistId,
+                ReferralReason = dto.ReferralReason,
+                DiagnosisCode = dto.DiagnosisCode,
+                UrgencyLevelId = dto.UrgencyLevelId,
+                SpecialtyRequestId = dto.SpecialtyRequestId,
+                OriginFacilityId = patient.PrimaryFacilityId,
+                ReferralStatusId = requestedStatusId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             _context.Referrals.Add(referral);
             await _context.SaveChangesAsync();
 
+            Console.WriteLine($"✅ Referral created: {referral.ReferralId}");
+
+            // ✅ SAFE SIGNALR BLOCK (CRITICAL FIX)
+            var groupName = $"Facility_{referral.OriginFacilityId}_Coordinators";
+
+            try
+            {
+                if (!string.IsNullOrEmpty(groupName))
+                {
+                    await _hub.Clients
+                        .Group(groupName)
+                        .SendAsync("ReferralCreated", new
+                        {
+                            referralId = referral.ReferralId,
+                            message = "New referral created by specialist"
+                        });
+
+                    Console.WriteLine($"✅ SignalR sent to {groupName}");
+                }
+                else
+                {
+                    Console.WriteLine("❌ Group name is null");
+                }
+            }
+            catch (Exception ex)
+            {
+                // ✅ DO NOT THROW → prevents connection crash
+                Console.WriteLine($"❌ SignalR ERROR: {ex.Message}");
+            }
+
             return referral.ReferralId;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ CreateReferral ERROR: {ex.Message}");
+            throw;
+        }
     }
+
+
     public async Task<IEnumerable<GetUrgencyLevelsDto>> GetAllUrgenciesAsync()
     {
         return await _context.UrgencyLevels
