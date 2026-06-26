@@ -23,6 +23,9 @@ public partial class Referral
 
     public int ReferralStatusId { get; set; }
 
+    // New: group identifier for referrals created from the same routing action
+    public Guid? ReferralGroupId { get; set; }
+
     public string ReferralReason { get; set; } = null!;
 
     public DateTime? CreatedAt { get; set; }
