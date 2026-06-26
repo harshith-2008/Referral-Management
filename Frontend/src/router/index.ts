@@ -3,7 +3,6 @@ import { isAuthenticated, getUserRole } from "../utils/auth";
 
 // Pages
 import Login from "../pages/auth/Login.vue";
-import Unauthorized from "../pages/auth/Unauthorized.vue";
 
 import AdminDashboard from "../pages/admin/AdminDashboard.vue";
 
@@ -12,13 +11,10 @@ import PatientReferrals from "../pages/patient/MyReferrals.vue";
 
 import CoordinatorDashboard from "../pages/referral-coordinator/CoordinatorDashboard.vue";
 import ReferralList from "../pages/referral-coordinator/ReferralList.vue";
-import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
-import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
 
 import SpecialistDashboard from "../pages/specialist/SpecialistDashboard.vue";
 import AssignedReferrals from "../pages/specialist/AssignedReferrals.vue";
 import CreateReferral from "../pages/specialist/CreateReferral.vue";
-import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 import Unauthorized from "../pages/auth/Unauthorized.vue";
 import IncomingRequests from "../pages/referral-coordinator/IncomingRequests.vue";
 import RoutingPending from "../pages/referral-coordinator/RoutingPending.vue";
