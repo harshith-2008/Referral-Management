@@ -36,7 +36,7 @@ const router = createRouter({
   component: ReportsPage,
   meta: {
     requiresAuth: true,
-    roles: ["1"], // admin role
+    roles: ["Admin"], // admin role
   },
 },
     
@@ -46,7 +46,7 @@ const router = createRouter({
   component: UsersPage,
   meta: {
     requiresAuth: true,
-    roles: ["1"],
+    roles: ["Admin"],
   },
 },
     {

@@ -233,19 +233,19 @@ const stats = computed<StatCardItem[]>(() => {
 
         <!-- Aging -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border hover:shadow-md transition">
-          <h3 class="text-lg font-semibold mb-4 text-gray-800">Referral Aging</h3>
+          <h3 class="text-lg font-semibold mb-4 text-gray-800">Referral Waiting Time</h3>
 
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between text-green-600">
-              <span>&lt; 3 days</span>
+            <div class="flex justify-between text-black">
+              <span>✅ Recently Added</span>
               <span>{{ referralAging?.lessThan3 }}</span>
             </div>
-            <div class="flex justify-between text-yellow-600">
-              <span>3–7 days</span>
+            <div class="flex justify-between text-black">
+              <span>⚠️ Waiting Moderately</span>
               <span>{{ referralAging?.between3And7 }}</span>
             </div>
-            <div class="flex justify-between text-red-600">
-              <span>&gt; 7 days</span>
+            <div class="flex justify-between text-black">
+              <span>🚨 Waiting Too Long</span>
               <span>{{ referralAging?.moreThan7 }}</span>
             </div>
           </div>

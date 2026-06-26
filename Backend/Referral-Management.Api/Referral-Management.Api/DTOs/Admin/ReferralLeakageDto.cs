@@ -7,4 +7,5 @@ public class ReferralLeakageDto
     public int NoAppointment { get; set; }
     public int DelayedAppointments { get; set; }
     public int NeverCompleted { get; set; }
+    public int OutOfNetwork { get; set; }
 }
