@@ -188,13 +188,14 @@ const handleAction = (referral: ReferralDTO) => {
             :key="referral.referralId"
             class="border-b border-slate-100 hover:bg-slate-50"
           >
-            <td class="px-6 py-4 text-blue-600 font-medium flex">
+            <td class="px-6 py-4 text-blue-600 font-medium flex flex-col">
               #{{ referral.referralId }}
               <span
                 v-if="(referral.destinationCount ?? 1) > 1"
-                class="ml-2 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+                class="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 flex"
               >
-                {{ referral.destinationCount }} Facilities
+                <p>{{ referral.destinationCount }}</p>
+                <p class="ml-1">Facilities</p>
               </span>
             </td>
 

@@ -6,15 +6,7 @@ import { patientNavLinks } from "../../config/navigation";
 
 import { getReferrals, getReferral } from "../../api/patient";
 
-import type { ReferralDTO } from "../../types/patient";
-
-/* ---------------- USER ---------------- */
-const user = ref({
-  name: "tharun motipeta",
-  welcomeName: "tharun",
-  role: "Patient",
-  initials: "TM",
-});
+import type { ReferralDTO, ReferralDetailsDTO } from "../../types/patient";
 
 /* ---------------- REFERRALS LIST ---------------- */
 const referrals = ref<ReferralDTO[]>([]);
@@ -22,7 +14,24 @@ const referrals = ref<ReferralDTO[]>([]);
 /* ---------------- MODAL STATE ---------------- */
 const showModal = ref(false);
 const loadingDetails = ref(false);
-const selectedReferral = ref<any>(null);
+const selectedReferral = ref<ReferralDetailsDTO | null>(null);
+
+/* ---------------- FORMATTERS ---------------- */
+const formatDateTime = (date?: string | null) =>
+  date ? new Date(date).toLocaleString() : "—";
+
+const formatAppointmentDate = (date?: string | null) =>
+  date
+    ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
+const formatAppointmentTime = (time?: string | null) =>
+  time?.slice(0, 5) || "—";
 
 /* ---------------- LOAD REFERRALS ---------------- */
 const loadReferrals = async () => {
@@ -40,6 +49,7 @@ const viewReferral = async (referralId: number) => {
   try {
     showModal.value = true;
     loadingDetails.value = true;
+    selectedReferral.value = null;
 
     const response = await getReferral(referralId);
     selectedReferral.value = response.data.data;
@@ -67,7 +77,7 @@ onMounted(loadReferrals);
     subtitle="Track all your referrals"
     :notification-count="1"
   >
-    <!-- ================= UPDATED TABLE UI ================= -->
+    <!-- ================= TABLE ================= -->
     <div class="rounded-xl border border-slate-100 bg-white shadow-sm">
       <div class="overflow-hidden">
         <table class="w-full">
@@ -135,7 +145,6 @@ onMounted(loadReferrals);
               </td>
             </tr>
 
-            <!-- Empty state -->
             <tr v-if="referrals.length === 0">
               <td
                 colspan="5"
@@ -152,33 +161,35 @@ onMounted(loadReferrals);
     <!-- ================= MODAL ================= -->
     <div
       v-if="showModal"
-      class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-6 sm:p-10"
+      class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-6 backdrop-blur-sm sm:p-10"
       @click.self="closeModal"
     >
       <div class="w-full max-w-lg space-y-4 pb-10">
         <!-- Header -->
         <div
-          class="bg-white rounded-2xl shadow-2xl px-6 py-5 flex items-start justify-between gap-4"
+          class="flex items-start justify-between gap-4 rounded-2xl bg-white px-6 py-5 shadow-2xl"
         >
           <div>
-            <p class="text-xs font-medium text-slate-400 mb-2">
+            <p class="mb-2 text-xs font-medium text-slate-400">
               Referral Details
             </p>
 
             <div
               v-if="loadingDetails"
-              class="h-7 w-40 rounded-lg bg-slate-100 animate-pulse"
+              class="h-7 w-40 animate-pulse rounded-lg bg-slate-100"
             />
+
             <h2
               v-else
-              class="text-xl font-semibold text-slate-900 leading-tight"
+              class="text-xl font-semibold leading-tight text-slate-900"
             >
               {{ selectedReferral?.specialty ?? "—" }}
             </h2>
+
             <p class="mt-1 text-[12px] text-slate-400">
               {{
                 selectedReferral
-                  ? new Date(selectedReferral.createdAt).toLocaleString()
+                  ? formatDateTime(selectedReferral.createdAt)
                   : ""
               }}
             </p>
@@ -186,7 +197,7 @@ onMounted(loadReferrals);
 
           <button
             type="button"
-            class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0 mt-1"
+            class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             @click="closeModal"
           >
             <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4">
@@ -201,12 +212,12 @@ onMounted(loadReferrals);
         </div>
 
         <!-- Body -->
-        <div class="bg-white rounded-2xl shadow-xl px-6 py-5">
+        <div class="rounded-2xl bg-white px-6 py-5 shadow-xl">
           <!-- Loading -->
           <div v-if="loadingDetails" class="space-y-4">
             <div v-for="i in 4" :key="i" class="space-y-1.5">
-              <div class="h-2.5 w-16 rounded bg-slate-100 animate-pulse" />
-              <div class="h-4 w-48 rounded bg-slate-100 animate-pulse" />
+              <div class="h-2.5 w-16 animate-pulse rounded bg-slate-100" />
+              <div class="h-4 w-48 animate-pulse rounded bg-slate-100" />
             </div>
           </div>
 
@@ -217,7 +228,7 @@ onMounted(loadReferrals);
           >
             <div>
               <p
-                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
               >
                 Specialty
               </p>
@@ -228,7 +239,7 @@ onMounted(loadReferrals);
 
             <div>
               <p
-                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
               >
                 Status
               </p>
@@ -239,7 +250,7 @@ onMounted(loadReferrals);
 
             <div>
               <p
-                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
               >
                 Urgency
               </p>
@@ -250,23 +261,109 @@ onMounted(loadReferrals);
 
             <div>
               <p
-                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
               >
                 Origin Facility
               </p>
               <p class="text-sm font-medium text-slate-800">
-                {{ selectedReferral.originFacility }}
+                {{ selectedReferral.originFacility || "—" }}
               </p>
             </div>
 
-            <div class="col-span-2 pt-2 border-t border-slate-100">
+            <div>
               <p
-                class="text-[10px] font-medium tracking-wider text-slate-400 uppercase mb-1"
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
+              >
+                Destination Facility
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.destinationFacility || "Being arranged" }}
+              </p>
+            </div>
+
+            <div>
+              <p
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
               >
                 Created At
               </p>
               <p class="text-sm font-medium text-slate-800">
-                {{ new Date(selectedReferral.createdAt).toLocaleString() }}
+                {{ formatDateTime(selectedReferral.createdAt) }}
+              </p>
+            </div>
+
+            <!-- Appointment Details -->
+            <div
+              class="col-span-2 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4"
+            >
+              <p
+                class="text-[10px] font-semibold uppercase tracking-wider text-blue-600"
+              >
+                Appointment details
+              </p>
+
+              <template v-if="selectedReferral.appointmentId">
+                <div class="mt-3 grid grid-cols-2 gap-x-6 gap-y-3">
+                  <div>
+                    <p class="text-xs text-slate-500">Date & time</p>
+                    <p class="mt-0.5 text-sm font-semibold text-slate-800">
+                      {{
+                        formatAppointmentDate(selectedReferral.appointmentDate)
+                      }}
+                      ·
+                      {{
+                        formatAppointmentTime(selectedReferral.appointmentTime)
+                      }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p class="text-xs text-slate-500">Status</p>
+                    <p class="mt-0.5 text-sm font-semibold text-slate-800">
+                      {{ selectedReferral.appointmentStatus || "—" }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p class="text-xs text-slate-500">Specialist</p>
+                    <p class="mt-0.5 text-sm font-semibold text-slate-800">
+                      {{ selectedReferral.specialistName || "—" }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p class="text-xs text-slate-500">Care facility</p>
+                    <p class="mt-0.5 text-sm font-semibold text-slate-800">
+                      {{ selectedReferral.specialistFacility || "—" }}
+                    </p>
+                  </div>
+                </div>
+              </template>
+
+              <p v-else class="mt-2 text-sm text-slate-600">
+                An appointment has not been scheduled for this referral yet.
+              </p>
+            </div>
+
+            <div class="col-span-2">
+              <p
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
+              >
+                Referral reason
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.referralReason || "Not provided" }}
+              </p>
+            </div>
+
+            <div class="col-span-2">
+              <p
+                class="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400"
+              >
+                Diagnosis code
+              </p>
+              <p class="text-sm font-medium text-slate-800">
+                {{ selectedReferral.diagnosisCode || "Not provided" }}
               </p>
             </div>
           </div>
@@ -278,7 +375,7 @@ onMounted(loadReferrals);
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-4 h-4 mt-0.5 text-red-400 shrink-0"
+              class="mt-0.5 h-4 w-4 shrink-0 text-red-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -288,6 +385,7 @@ onMounted(loadReferrals);
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
+
             <p class="text-sm text-red-600">Failed to load referral details.</p>
           </div>
         </div>

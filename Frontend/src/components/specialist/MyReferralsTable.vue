@@ -79,7 +79,7 @@ const filteredReferrals = computed(() => {
           <tr
             v-for="referral in filteredReferrals"
             :key="referral.referralId"
-            class="border-b border-slate-100 hover:bg-slate-50"
+            class="border-b border-slate-100 hover:bg-slate-50 flex flex-col"
           >
             <td class="px-6 py-4 font-medium text-blue-600">
               #{{ referral.referralId }}
