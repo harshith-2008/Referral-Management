@@ -85,9 +85,9 @@ const filteredReferrals = computed(() => {
               #{{ referral.referralId }}
               <span
                 v-if="(referral.destinationCount ?? 1) > 1"
-                class="ml-2 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+                class="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 flex"
               >
-                {{ referral.destinationCount }} destinations
+                {{ referral.destinationCount }} Facilities
               </span>
             </td>
 
