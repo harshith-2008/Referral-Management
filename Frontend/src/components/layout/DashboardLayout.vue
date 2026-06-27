@@ -5,7 +5,6 @@ import type { NavLink, SidebarUser } from "../../types/navigation";
 
 defineProps<{
   navLinks: NavLink[];
-  user: SidebarUser;
   title: string;
   subtitle: string;
   notificationCount?: number;
@@ -14,13 +13,12 @@ defineProps<{
 
 <template>
   <div class="flex min-h-screen min-w-[1280px] bg-slate-50">
-    <AppSidebar :nav-links="navLinks" :user="user" />
+    <AppSidebar :nav-links="navLinks" />
 
     <div class="flex min-w-0 flex-1 flex-col">
       <AppNavbar
         :title="title"
         :subtitle="subtitle"
-        :user-initials="user.initials"
         :notification-count="notificationCount"
       />
 

@@ -91,5 +91,4 @@ public class SpecialistController : ControllerBase
 
         return Ok(specialities);
     }
-
 }

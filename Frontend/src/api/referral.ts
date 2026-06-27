@@ -6,7 +6,7 @@ import type {
   CreateReferralRequestDTO,
   ReferralDTO,
   ReferralDetailDTO,
-  FacilityDTO,
+  FacilitiesDropdownResponseDTO,
 } from "../types/referral";
 
 import type { SpecialistMatchDTO } from "../types/specialist";
@@ -23,7 +23,9 @@ export const getMatchingSpecialists = (referralId: number) =>
   );
 
 export const getFacilitiesDropdown = (referralId: number) =>
-  api.get<FacilityDTO[]>(`/referral/${referralId}/facilities-dropdown`);
+  api.get<ApiResponseDTO<FacilitiesDropdownResponseDTO>>(
+    `/referral/${referralId}/facilities-dropdown`,
+  );
 
 export const routeReferral = (data: CreateReferralRequestDTO) =>
   api.post<ApiResponseDTO<any>>("/referral/route", data);

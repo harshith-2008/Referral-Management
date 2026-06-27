@@ -41,16 +41,6 @@ defineProps<{
             <th
               class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
             >
-              Hospital Branch
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
-              Urgency
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-            >
               Status
             </th>
           </tr>
@@ -69,12 +59,12 @@ defineProps<{
             <td class="px-6 py-4 text-sm font-semibold text-slate-900">
               {{ referral.patientName }}
             </td>
-            <td class="px-6 py-4 text-sm text-slate-600">
+            <!-- <td class="px-6 py-4 text-sm text-slate-600">
               {{ referral.destinationFacility }}
             </td>
             <td class="px-6 py-4">
               <CoordinatorUrgencyBadge :urgency="referral.urgency as any" />
-            </td>
+            </td> -->
             <td class="px-6 py-4">
               <CoordinatorStatusBadge :status="referral.status as any" />
             </td>

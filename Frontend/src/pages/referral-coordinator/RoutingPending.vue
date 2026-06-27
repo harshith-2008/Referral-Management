@@ -39,47 +39,58 @@ const mockFacilities = [
 
 const referrals = ref<RoutingPendingReferral[]>([]);
 const loading = ref(false);
-
+const errorMessage = ref("");
 const selectedReferral = ref<any | null>(null);
 const showRouteModal = ref(false);
 
 const loadReferrals = async () => {
   loading.value = true;
+  errorMessage.value = "";
 
   try {
     const response = await getSubmittedPendingReferrals();
 
-    referrals.value = response.data.data;
+    referrals.value = response.data.data ?? [];
   } catch (error) {
     console.error("Failed to load referrals:", error);
 
-    // fallback demo data
     referrals.value = [...mockRoutingPendingReferrals];
 
-    alert(
-      `Backend unavailable. Showing demo data.\n\n${getErrorMessage(error)}`,
-    );
+    errorMessage.value = `Backend unavailable. Showing demo data. (${getErrorMessage(error)})`;
   } finally {
     loading.value = false;
   }
 };
 
 const openRouteModal = async (referral: RoutingPendingReferral) => {
-  selectedReferral.value = {
-    ...referral,
-    facilities: mockFacilities,
-  };
+  try {
+    selectedReferral.value = {
+      ...referral,
+      facilities: mockFacilities,
+    };
 
-  showRouteModal.value = true;
+    showRouteModal.value = true;
+  } catch (error) {
+    console.error("Failed to open route modal:", error);
+
+    errorMessage.value = getErrorMessage(error);
+  }
 };
+
 const closeRouteModal = () => {
   showRouteModal.value = false;
   selectedReferral.value = null;
 };
 
 const handleSuccess = async () => {
-  closeRouteModal();
-  await loadReferrals();
+  try {
+    closeRouteModal();
+    await loadReferrals();
+  } catch (error) {
+    console.error("Failed to refresh referrals:", error);
+
+    errorMessage.value = getErrorMessage(error);
+  }
 };
 
 onMounted(loadReferrals);
@@ -88,7 +99,6 @@ onMounted(loadReferrals);
 <template>
   <DashboardLayout
     :nav-links="coordinatorNavLinks"
-    :user="user"
     title="Routing Pending"
     subtitle="Route submitted referrals to other facilities"
     :notification-count="2"

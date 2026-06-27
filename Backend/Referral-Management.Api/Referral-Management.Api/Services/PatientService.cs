@@ -114,12 +114,16 @@ namespace Referral_Management.Api.Services
                 .Include(r => r.ReferralStatus)
                 .Include(r => r.SpecialtyRequest)
                 .Include(r => r.UrgencyLevel)
+                .Include(r => r.OriginFacility)
+                .Include(r => r.DestinationFacility)
                 .ToListAsync();
 
             var appointments = await _context.Appointments
                 .Where(a => a.PatientId == patient.PatientId)
                 .Include(a => a.Specialist).ThenInclude(s => s.User)
+                .Include(a => a.Specialist).ThenInclude(s => s.Facility)
                 .Include(a => a.AppointmentStatus)
+                .Include(a => a.Referral).ThenInclude(r => r.SpecialtyRequest)
                 .ToListAsync();
 
             var upcoming = appointments
@@ -141,9 +145,12 @@ namespace Referral_Management.Api.Services
                 UpcomingAppointmentList = upcoming.Select(a => new AppointmentDto
                 {
                     AppointmentId = a.AppointmentId,
+                    ReferralId = a.ReferralId,
                     AppointmentDate = a.AppointmentDate,
                     AppointmentTime = a.AppointmentTime,
                     SpecialistName = a.Specialist.User.FirstName + " " + a.Specialist.User.LastName,
+                    FacilityName = a.Specialist.Facility.FacilityName,
+                    Specialty = a.Referral.SpecialtyRequest.SpecialtyName,
                     AppointmentStatus = a.AppointmentStatus.StatusName
                 }).ToList(),
 
@@ -156,9 +163,9 @@ namespace Referral_Management.Api.Services
                         Specialty = r.SpecialtyRequest.SpecialtyName,
                         ReferralStatus = r.ReferralStatus.StatusName,
                         Urgency = r.UrgencyLevel.LevelName,
-                        OriginFacility = r.OriginFacility.FacilityName,
-                        DestinationFacility = r.DestinationFacility.FacilityName,
-                        CreatedAt = System.DateTime.UtcNow
+                        OriginFacility = r.OriginFacility!=null?r.OriginFacility.FacilityName:string.Empty,
+                        DestinationFacility = r.DestinationFacility != null ? r.DestinationFacility.FacilityName: string.Empty,
+                        CreatedAt = r.CreatedAt ?? DateTime.UtcNow
                     }).ToList()
             };
         }
@@ -183,8 +190,8 @@ namespace Referral_Management.Api.Services
                     Specialty = r.SpecialtyRequest.SpecialtyName,
                     ReferralStatus = r.ReferralStatus.StatusName,
                     Urgency = r.UrgencyLevel.LevelName,
-                    OriginFacility = r.OriginFacility.FacilityName,
-                    DestinationFacility = r.DestinationFacility.FacilityName,
+                    OriginFacility = r.OriginFacility != null ? r.OriginFacility.FacilityName : string.Empty,
+                    DestinationFacility = r.DestinationFacility != null ? r.DestinationFacility.FacilityName : string.Empty,
                     CreatedAt = System.DateTime.UtcNow
                 })
                 .ToListAsync();
@@ -206,6 +213,18 @@ namespace Referral_Management.Api.Services
             if (r == null)
                 throw new NotFoundException("Referral not found.");
 
+            var appointment = await _context.Appointments
+                .AsNoTracking()
+                .Where(a => a.ReferralId == r.ReferralId)
+                .Include(a => a.Specialist)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Specialist)
+                    .ThenInclude(s => s.Facility)
+                .Include(a => a.AppointmentStatus)
+                .OrderByDescending(a => a.AppointmentDate)
+                .ThenByDescending(a => a.AppointmentTime)
+                .FirstOrDefaultAsync();
+
             return new ReferralDetailsDto
             {
                 ReferralId = r.ReferralId,
@@ -214,9 +233,17 @@ namespace Referral_Management.Api.Services
                 Specialty = r.SpecialtyRequest.SpecialtyName,
                 ReferralStatus = r.ReferralStatus.StatusName,
                 Urgency = r.UrgencyLevel.LevelName,
-                OriginFacility = r.OriginFacility.FacilityName,
-                DestinationFacility = r.DestinationFacility.FacilityName,
-                CreatedAt = System.DateTime.UtcNow
+                OriginFacility = r.OriginFacility?.FacilityName ?? string.Empty,
+                DestinationFacility = r.DestinationFacility?.FacilityName ?? string.Empty,
+                CreatedAt = r.CreatedAt ?? DateTime.UtcNow,
+                AppointmentId = appointment?.AppointmentId,
+                AppointmentDate = appointment?.AppointmentDate,
+                AppointmentTime = appointment?.AppointmentTime,
+                AppointmentStatus = appointment?.AppointmentStatus.StatusName,
+                SpecialistName = appointment == null
+                    ? null
+                    : appointment.Specialist.User.FirstName + " " + appointment.Specialist.User.LastName,
+                SpecialistFacility = appointment?.Specialist.Facility.FacilityName
             };
         }
 
@@ -254,9 +281,12 @@ namespace Referral_Management.Api.Services
                 .Select(a => new AppointmentDto
                 {
                     AppointmentId = a.AppointmentId,
+                    ReferralId = a.ReferralId,
                     AppointmentDate = a.AppointmentDate,
                     AppointmentTime = a.AppointmentTime,
                     SpecialistName = a.Specialist.User.FirstName + " " + a.Specialist.User.LastName,
+                    FacilityName = a.Specialist.Facility.FacilityName,
+                    Specialty = a.Referral.SpecialtyRequest.SpecialtyName,
                     AppointmentStatus = a.AppointmentStatus.StatusName
                 })
                 .ToListAsync();
@@ -274,9 +304,12 @@ namespace Referral_Management.Api.Services
                 .Select(a => new AppointmentDto
                 {
                     AppointmentId = a.AppointmentId,
+                    ReferralId = a.ReferralId,
                     AppointmentDate = a.AppointmentDate,
                     AppointmentTime = a.AppointmentTime,
                     SpecialistName = a.Specialist.User.FirstName + " " + a.Specialist.User.LastName,
+                    FacilityName = a.Specialist.Facility.FacilityName,
+                    Specialty = a.Referral.SpecialtyRequest.SpecialtyName,
                     AppointmentStatus = a.AppointmentStatus.StatusName
                 })
                 .ToListAsync();
@@ -294,9 +327,12 @@ namespace Referral_Management.Api.Services
                 .Select(a => new AppointmentDto
                 {
                     AppointmentId = a.AppointmentId,
+                    ReferralId = a.ReferralId,
                     AppointmentDate = a.AppointmentDate,
                     AppointmentTime = a.AppointmentTime,
                     SpecialistName = a.Specialist.User.FirstName + " " + a.Specialist.User.LastName,
+                    FacilityName = a.Specialist.Facility.FacilityName,
+                    Specialty = a.Referral.SpecialtyRequest.SpecialtyName,
                     AppointmentStatus = a.AppointmentStatus.StatusName
                 })
                 .ToListAsync();

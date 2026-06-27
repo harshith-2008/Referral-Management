@@ -79,10 +79,16 @@ const filteredReferrals = computed(() => {
           <tr
             v-for="referral in filteredReferrals"
             :key="referral.referralId"
-            class="border-b border-slate-100 hover:bg-slate-50"
+            class="border-b border-slate-100 hover:bg-slate-50 flex flex-col"
           >
             <td class="px-6 py-4 font-medium text-blue-600">
               #{{ referral.referralId }}
+              <span
+                v-if="(referral.destinationCount ?? 1) > 1"
+                class="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 flex"
+              >
+                {{ referral.destinationCount }} Facilities
+              </span>
             </td>
 
             <td class="px-6 py-4">

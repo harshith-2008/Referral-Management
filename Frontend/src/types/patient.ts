@@ -41,12 +41,15 @@ export interface PatientProfileDTO {
 
 export interface AppointmentDTO {
   appointmentId: number;
+  referralId: number;
 
   appointmentDate: string;
 
   appointmentTime: string;
 
   specialistName: string;
+  facilityName: string;
+  specialty: string;
 
   appointmentStatus: string;
 }
@@ -81,6 +84,13 @@ export interface ReferralDTO {
   destinationFacility: string;
 
   createdAt: string;
+
+  appointmentId?: number | null;
+  appointmentDate?: string | null;
+  appointmentTime?: string | null;
+  appointmentStatus?: string | null;
+  specialistName?: string | null;
+  specialistFacility?: string | null;
 }
 
 export interface ReferralDetailsDTO {
