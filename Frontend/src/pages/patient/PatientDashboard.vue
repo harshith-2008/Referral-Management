@@ -211,7 +211,7 @@ onMounted(loadDashboard);
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-100 bg-white shadow-sm">
+      <!-- <div class="rounded-xl border border-slate-100 bg-white shadow-sm">
         <div class="border-b border-slate-100 px-6 py-4">
           <h2 class="text-base font-semibold text-slate-900">
             Recent referral
@@ -258,7 +258,7 @@ onMounted(loadDashboard);
             No referral updates yet.
           </p>
         </div>
-      </div>
+      </div> -->
     </div>
   </DashboardLayout>
 </template>
