@@ -56,6 +56,7 @@ const filteredReferrals = computed(() => {
 const statusCounts = computed(() => ({
   total: props.referrals.length,
   submitted: props.referrals.filter((r) => r.status === "Submitted").length,
+  rejected: props.referrals.filter((r) => r.status === "Rejected").length,
 }));
 
 const handleRoute = (referral: RoutingPendingReferral) => {
@@ -129,6 +130,12 @@ const handleRoute = (referral: RoutingPendingReferral) => {
 
         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold">
           Submitted: {{ statusCounts.submitted }}
+        </span>
+
+        <span
+          class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700"
+        >
+          Rejected: {{ statusCounts.rejected }}
         </span>
 
         <span class="ml-auto text-sm text-slate-500">
@@ -212,7 +219,7 @@ const handleRoute = (referral: RoutingPendingReferral) => {
                 class="inline-flex items-center rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
                 @click="handleRoute(referral)"
               >
-                Route
+                {{ referral.status === "Rejected" ? "Route Again" : "Route" }}
               </button>
             </td>
           </tr>

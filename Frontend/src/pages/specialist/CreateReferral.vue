@@ -16,14 +16,6 @@ import { getUrgencyLevels } from "../../api/specialist.ts";
 import { getSpecialities } from "../../api/specialist.ts";
 import { getPatientByMrn } from "../../api/patient.ts";
 import { createReferralIntake } from "../../api/specialist.ts";
-import axios from "axios";
-
-const user = ref({
-  name: "Dr. James Rivera",
-  welcomeName: "Dr. Rivera",
-  role: "Cardiologist",
-  initials: "JR",
-});
 
 const mrn = ref("");
 const searching = ref(false);
@@ -40,6 +32,7 @@ const searchSuccess = ref("");
 
 const referralError = ref("");
 const referralSuccess = ref("");
+const dropdownError = ref("");
 
 const form = reactive<ReferralIntakeCreateDTO>({
   patientId: 0,
@@ -58,8 +51,7 @@ const loadUrgencies = async () => {
     console.error("Failed to load urgency levels:", error);
 
     urgencyLevels.value = [];
-
-    alert(getErrorMessage(error));
+    dropdownError.value = getErrorMessage(error);
   }
 };
 
@@ -72,8 +64,7 @@ const loadSpecialities = async () => {
     console.error("Failed to load specialities:", error);
 
     specialities.value = [];
-
-    alert(getErrorMessage(error));
+    dropdownError.value = getErrorMessage(error);
   }
 };
 
@@ -161,6 +152,13 @@ onMounted(async () => {
     :notification-count="2"
   >
     <div class="space-y-6">
+      <div
+        v-if="dropdownError"
+        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        {{ dropdownError }}
+      </div>
+
       <!-- Patient Lookup -->
 
       <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">

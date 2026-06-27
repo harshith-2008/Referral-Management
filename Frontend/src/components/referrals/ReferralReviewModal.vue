@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import type { SpecialistPatientDTO } from "../../types/referral";
 import UrgencyBadge from "./UrgencyBadge.vue";
 
+interface ReferralReviewModalReferral {
+  referralId: number;
+  patientName: string;
+  age: number;
+  gender: string;
+  mrn: string;
+  specialty: string;
+  urgency: string;
+  diagnosisCode?: string;
+  appointmentDate?: string;
+}
+
 defineProps<{
-  referral: SpecialistPatientDTO;
+  referral: ReferralReviewModalReferral;
 }>();
 
 defineEmits<{

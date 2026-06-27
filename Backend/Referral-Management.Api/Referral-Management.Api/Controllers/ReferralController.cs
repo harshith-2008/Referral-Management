@@ -164,6 +164,25 @@ public class ReferralController : ControllerBase
         });
     }
 
+    [Authorize]
+    [HttpPost("{referralId:int}/reject")]
+    public async Task<IActionResult> RejectReferral(int referralId)
+    {
+        var coordinatorIdClaim = User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        if (!int.TryParse(coordinatorIdClaim, out var coordinatorId))
+            return Unauthorized();
+
+        await _referralService.RejectReferralAsync(referralId, coordinatorId);
+
+        return Ok(new ApiResponseDTO<object>
+        {
+            Success = true,
+            Message = "Referral rejected successfully.",
+            Data = null
+        });
+    }
+
     [HttpGet("submitted")]
     public async Task<IActionResult> GetSubmittedReferrals()
     {
