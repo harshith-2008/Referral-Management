@@ -18,7 +18,10 @@ namespace Referral_Management.Api.Services
 
         public async Task<AvailableSlotsResponseDTO> GetAvailableSlotsAsync(int specialistId, DateOnly date)
         {
-            if (date < DateOnly.FromDateTime(DateTime.UtcNow))
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
+            if (date < today)
             {
                 throw new BadRequestException(
                     "Cannot retrieve slots for past dates.");
@@ -61,7 +64,9 @@ namespace Referral_Management.Api.Services
 
             while (currentSlot < specialist.ShiftBlock.EndTime)
             {
-                if (!bookedSlots.Contains(currentSlot))
+                var isPastSlotToday = date == today && currentSlot <= nowTime;
+
+                if (!isPastSlotToday && !bookedSlots.Contains(currentSlot))
                 {
                     availableSlots.Add(new AvailableSlotDTO
                     {
@@ -84,11 +89,18 @@ namespace Referral_Management.Api.Services
 
         public async Task<DailyScheduleResponseDTO> GetScheduleAsync(int specialistId, DateOnly date)
         {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
+            if (date < today)
+                throw new BadRequestException("Cannot retrieve schedule for past dates.");
+
             var appointments = await _context.Appointments
                 .AsNoTracking()
                 .Where(a =>
                     a.SpecialistId == specialistId &&
-                    a.AppointmentDate == date)
+                    a.AppointmentDate == date &&
+                    (a.AppointmentDate > today || a.AppointmentTime > nowTime))
                 .OrderBy(a => a.AppointmentTime)
                 .Select(a => new AppointmentScheduleDTO
                 {
@@ -117,7 +129,11 @@ namespace Referral_Management.Api.Services
             CreateAppointmentDTO request,
             int coordinatorId)
         {
-            if (request.AppointmentDate < DateOnly.FromDateTime(DateTime.Now))
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
+            if (request.AppointmentDate < today ||
+                (request.AppointmentDate == today && request.AppointmentTime <= nowTime))
                 throw new BadRequestException("Cannot schedule appointment in the past.");
 
             var referral = await _context.Referrals
@@ -208,9 +224,15 @@ namespace Referral_Management.Api.Services
         }
         public async Task<AppointmentDetailsDTO> GetAppointmentDetailsAsync(int appointmentId)
         {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
             var appointment = await _context.Appointments
                 .AsNoTracking()
-                .Where(a => a.AppointmentId == appointmentId)
+                .Where(a =>
+                    a.AppointmentId == appointmentId &&
+                    (a.AppointmentDate > today ||
+                     (a.AppointmentDate == today && a.AppointmentTime > nowTime)))
                 .Select(a => new AppointmentDetailsDTO
                 {
                     AppointmentId = a.AppointmentId,
@@ -237,6 +259,9 @@ namespace Referral_Management.Api.Services
 
         public async Task<List<UserAppointmentDTO>> GetUserAppointmentsAsync(int userId)
         {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
             var patient = await _context.Patients
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.UserId == userId);
@@ -248,10 +273,13 @@ namespace Referral_Management.Api.Services
 
             return await _context.Appointments
                 .AsNoTracking()
-                .Where(a => a.PatientId == patient.PatientId)
+                .Where(a =>
+                    a.PatientId == patient.PatientId &&
+                    (a.AppointmentDate > today ||
+                     (a.AppointmentDate == today && a.AppointmentTime > nowTime)))
                 .OrderBy(a => a.AppointmentStatusId)
-                .ThenByDescending(a => a.AppointmentDate)
-                .ThenByDescending(a => a.AppointmentTime)
+                .ThenBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
                 .Select(a => new UserAppointmentDTO
                 {
                     AppointmentId = a.AppointmentId,

@@ -49,23 +49,21 @@ const router = createRouter({
       },
     },
     {
-  path: "/admin/reports",
-  component: ReportsPage,
-  meta: {
-    requiresAuth: true,
-    roles: ["1"], // admin role
-  },
-},
-    
-
-{
-  path: "/admin/users",
-  component: UsersPage,
-  meta: {
-    requiresAuth: true,
-    roles: ["1"],
-  },
-},
+      path: "/admin/reports",
+      component: ReportsPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["Admin"],
+      },
+    },
+    {
+      path: "/admin/users",
+      component: UsersPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["Admin"],
+      },
+    },
     {
       path: "/admin/profile",
       component: ProfileSettingsPage,
@@ -195,7 +193,7 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const requiresAuth = to.meta.requiresAuth as boolean;
   const allowedRoles = to.meta.roles as string[] | undefined;
 

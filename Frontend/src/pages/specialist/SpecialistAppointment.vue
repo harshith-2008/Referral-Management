@@ -16,14 +16,16 @@ import type {
   AppointmentDetailsDTO,
 } from "../../types/appointment";
 
-const user = ref({
-  name: "Dr. James Rivera",
-  welcomeName: "Dr. Rivera",
-  role: "Cardiologist",
-  initials: "JR",
-});
+const getTodayInputValue = () => {
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  const localDate = new Date(today.getTime() - offset * 60 * 1000);
 
-const selectedDate = ref(new Date().toISOString().split("T")[0]);
+  return localDate.toISOString().split("T")[0];
+};
+
+const minAppointmentDate = getTodayInputValue();
+const selectedDate = ref(minAppointmentDate);
 
 const appointments = ref<AppointmentScheduleDTO[]>([]);
 
@@ -37,6 +39,12 @@ const infoMessage = ref("");
 const loadAppointments = async () => {
   errorMessage.value = "";
   infoMessage.value = "";
+
+  if (selectedDate.value < minAppointmentDate) {
+    selectedDate.value = minAppointmentDate;
+    infoMessage.value = "Past appointment schedules are not available.";
+    return;
+  }
 
   try {
     loading.value = true;
@@ -88,6 +96,7 @@ onMounted(loadAppointments);
       <input
         v-model="selectedDate"
         type="date"
+        :min="minAppointmentDate"
         class="rounded-lg border px-4 py-2"
         @change="loadAppointments"
       />

@@ -29,6 +29,9 @@ public class AdminService : IAdminService
     // ================= DASHBOARD =================
     public async Task<AdminDashboardDto> GetDashboardAsync()
     {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
         return new AdminDashboardDto
         {
             TotalUsers = await _context.Users.CountAsync(),
@@ -52,7 +55,7 @@ public class AdminService : IAdminService
                 .CountAsync(r => r.ReferralStatus.StatusName == "Cancelled"),
 
             AppointmentsToday = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate == DateOnly.FromDateTime(DateTime.UtcNow))
+                .CountAsync(a => a.AppointmentDate == today && a.AppointmentTime > nowTime)
         };
     }
 
@@ -151,17 +154,22 @@ public class AdminService : IAdminService
     // ================= APPOINTMENT ANALYTICS =================
     public async Task<AppointmentAnalyticsDto> GetAppointmentAnalyticsAsync()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
         return new AppointmentAnalyticsDto
         {
             TotalAppointments = await _context.Appointments.CountAsync(),
-            Upcoming = await _context.Appointments.CountAsync(a => a.AppointmentDate >= today),
+            Upcoming = await _context.Appointments.CountAsync(a =>
+                a.AppointmentDate > today ||
+                (a.AppointmentDate == today && a.AppointmentTime > nowTime)),
             Completed = await _context.Appointments
                 .CountAsync(a => a.AppointmentStatus.StatusName == "Completed"),
             Missed = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate < today &&
-                                 a.AppointmentStatus.StatusName != "Completed")
+                .CountAsync(a =>
+                    (a.AppointmentDate < today ||
+                     (a.AppointmentDate == today && a.AppointmentTime <= nowTime)) &&
+                    a.AppointmentStatus.StatusName != "Completed")
         };
     }
 

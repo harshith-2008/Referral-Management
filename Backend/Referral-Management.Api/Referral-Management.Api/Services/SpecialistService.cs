@@ -3,7 +3,6 @@ using Referral_Management.Api.DTOs;
 using Referral_Management.Api.Exceptions;
 using Referral_Management.Api.Models;
 using Referral_Management.Api.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace Referral_Management.Api.Services;
 
@@ -18,6 +17,9 @@ public class SpecialistService : ISpecialistService
 
     public async Task<List<SpecialistPatientDto>> GetAssignedPatients(int specialistId)
     {
+        var todayDate = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
         var referrals = await _context.ReferralAssignments
             .AsNoTracking()
             .Where(ra => ra.ToSpecialistId == specialistId)
@@ -50,11 +52,19 @@ public class SpecialistService : ISpecialistService
                 age--;
 
             // ✅ AppointmentDate FIX (DateOnly → DateTime?)
-            DateTime? appointmentDate = ra.Referral.Appointments
+            var upcomingAppointment = ra.Referral.Appointments
+                .Where(a =>
+                    a.AppointmentDate > todayDate ||
+                    (a.AppointmentDate == todayDate && a.AppointmentTime > nowTime))
                 .OrderBy(a => a.AppointmentDate)
-                .Select(a => a.AppointmentDate.ToDateTime(TimeOnly.MinValue))
-                .Cast<DateTime?>()
+                .ThenBy(a => a.AppointmentTime)
                 .FirstOrDefault();
+
+            if (upcomingAppointment == null)
+                continue;
+
+            DateTime? appointmentDate = upcomingAppointment.AppointmentDate
+                .ToDateTime(TimeOnly.MinValue);
 
             result.Add(new SpecialistPatientDto
             {
