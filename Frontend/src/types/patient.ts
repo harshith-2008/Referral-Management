@@ -111,6 +111,13 @@ export interface ReferralDetailsDTO {
   destinationFacility: string;
 
   createdAt: string;
+
+  appointmentId?: number | null;
+  appointmentDate?: string | null;
+  appointmentTime?: string | null;
+  appointmentStatus?: string | null;
+  specialistName?: string | null;
+  specialistFacility?: string | null;
 }
 
 export interface ReferralStatusDTO {

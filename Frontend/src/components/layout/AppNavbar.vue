@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { getMe } from "../../api/authApi";
+import { getCurrentUser } from "../../utils/currentUser";
 
 defineProps<{
   title: string;
@@ -13,8 +13,7 @@ const lastName = ref("");
 
 onMounted(async () => {
   try {
-    const res = await getMe();
-    const data = res.data.data;
+    const data = await getCurrentUser();
 
     firstName.value = data.firstName ?? "";
     lastName.value = data.lastName ?? "";

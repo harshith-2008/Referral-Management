@@ -14,6 +14,7 @@ public interface IReferralService
 
     // changed to return DTOs (consistent with controllers' ApiResponseDTO<T>)
     Task<List<ReferralDto>> RouteReferralAsync(CreateReferralRequest request);
+    Task RejectReferralAsync(int referralId, int coordinatorId);
 
     Task<List<ReferralDto>> GetSubmittedReferralsForCoordinator(int coordinatorId);
 

@@ -25,10 +25,31 @@ import MyReferrals from "../pages/specialist/MyReferrals.vue";
 
 import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 
+const getHomeRouteForRole = (role: string | null) => {
+  switch (role) {
+    case "Patient":
+      return "/patient";
+    case "ReferralCoordinator":
+      return "/coordinator";
+    case "Specialist":
+      return "/specialist";
+    case "Admin":
+      return "/admin";
+    default:
+      return "/login";
+  }
+};
+
 const router = createRouter({
   history: createWebHistory(),
 
   routes: [
+    {
+      path: "/",
+      redirect: () =>
+        isAuthenticated() ? getHomeRouteForRole(getUserRole()) : "/login",
+    },
+
     // ================= AUTH =================
     {
       path: "/login",
@@ -49,23 +70,21 @@ const router = createRouter({
       },
     },
     {
-  path: "/admin/reports",
-  component: ReportsPage,
-  meta: {
-    requiresAuth: true,
-    roles: ["Admin"], // admin role
-  },
-},
-    
-
-{
-  path: "/admin/users",
-  component: UsersPage,
-  meta: {
-    requiresAuth: true,
-    roles: ["Admin"],
-  },
-},
+      path: "/admin/reports",
+      component: ReportsPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["Admin"],
+      },
+    },
+    {
+      path: "/admin/users",
+      component: UsersPage,
+      meta: {
+        requiresAuth: true,
+        roles: ["Admin"],
+      },
+    },
     {
       path: "/admin/profile",
       component: ProfileSettingsPage,
@@ -195,12 +214,16 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const requiresAuth = to.meta.requiresAuth as boolean;
   const allowedRoles = to.meta.roles as string[] | undefined;
 
   const auth = isAuthenticated();
   const role = getUserRole();
+
+  if (to.path === "/login" && auth) {
+    return next(getHomeRouteForRole(role));
+  }
 
   // 1. Public route → allow
   if (!requiresAuth) {

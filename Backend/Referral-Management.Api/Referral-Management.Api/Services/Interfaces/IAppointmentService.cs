@@ -13,5 +13,7 @@
         Task<List<UserAppointmentDTO>> GetUserAppointmentsAsync(int userId);
 
         Task<AppointmentStatusResponseDTO> UpdateAppointmentStatusAsync(UpdateAppointmentStatusDTO request);
+
+        Task<AppointmentStatusResponseDTO> MarkAppointmentCompletedAsync(int appointmentId, int specialistId);
     }
 }

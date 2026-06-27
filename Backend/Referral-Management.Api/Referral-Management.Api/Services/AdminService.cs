@@ -30,15 +30,8 @@ public class AdminService : IAdminService
 
     public async Task<AdminDashboardDto> GetDashboardAsync()
     {
-        var totalUsers = await _context.Users.CountAsync();
-        var totalPatients = await _context.Patients.CountAsync();
-        var totalSpecialists = await _context.Specialists.CountAsync();
-        var totalReferrals = await _context.Referrals.CountAsync();
-
-        // ✅ Only your hospital facilities
-        var totalFacilities = await _context.Facilities
-            .Where(f => f.HospitalId == 1)
-            .CountAsync();
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
         return new AdminDashboardDto
         {
@@ -50,31 +43,19 @@ public class AdminService : IAdminService
             PendingReferrals = await _context.Referrals.CountAsync(r =>
                 r.ReferralStatus.StatusName == "Requested" ||
                 r.ReferralStatus.StatusName == "Submitted" ||
-                r.ReferralStatus.StatusName == "Accepted" ||
-                r.ReferralStatus.StatusName == "Scheduled"
-            ),
+                r.ReferralStatus.StatusName == "Accepted"
+),
+
 
             CompletedReferrals = await _context.Referrals
                 .CountAsync(r => r.ReferralStatus.StatusName == "Completed"),
 
             CancelledReferrals = await _context.Referrals
-                .CountAsync(r => r.ReferralStatus.StatusName == "Cancelled"),
+                .CountAsync(r => r.ReferralStatus.StatusName == "Rejected" ||
+                                 r.ReferralStatus.StatusName == "Closed"),
 
             AppointmentsToday = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate == DateOnly.FromDateTime(DateTime.UtcNow)),
-
-
-            // ✅ ✅ NEW METRICS ✅ ✅
-
-            // 👉 Referrals per Patient
-            ReferralsPerPatient = totalPatients == 0
-                ? 0
-                : (double)totalReferrals / totalPatients,
-
-            // 👉 Average referrals per facility (ONLY your hospital)
-            AverageReferralsPerFacility = totalFacilities == 0
-                ? 0
-                : (double)totalReferrals / totalFacilities
+                .CountAsync(a => a.AppointmentDate == today && a.AppointmentTime > nowTime)
         };
     }
 
@@ -176,17 +157,22 @@ public class AdminService : IAdminService
     // ================= APPOINTMENT ANALYTICS =================
     public async Task<AppointmentAnalyticsDto> GetAppointmentAnalyticsAsync()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
         return new AppointmentAnalyticsDto
         {
             TotalAppointments = await _context.Appointments.CountAsync(),
-            Upcoming = await _context.Appointments.CountAsync(a => a.AppointmentDate >= today),
+            Upcoming = await _context.Appointments.CountAsync(a =>
+                a.AppointmentDate > today ||
+                (a.AppointmentDate == today && a.AppointmentTime > nowTime)),
             Completed = await _context.Appointments
                 .CountAsync(a => a.AppointmentStatus.StatusName == "Completed"),
             Missed = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate < today &&
-                                 a.AppointmentStatus.StatusName != "Completed")
+                .CountAsync(a =>
+                    (a.AppointmentDate < today ||
+                     (a.AppointmentDate == today && a.AppointmentTime <= nowTime)) &&
+                    a.AppointmentStatus.StatusName != "Completed")
         };
     }
 
@@ -268,7 +254,7 @@ public class AdminService : IAdminService
         var scheduled = await _context.Referrals
             .Where(r =>
                 r.CreatedAt.HasValue &&
-                r.ReferralStatus.StatusName == "Scheduled"
+                r.ReferralStatus.StatusName == "Accepted"
             )
             .Select(r => new
             {

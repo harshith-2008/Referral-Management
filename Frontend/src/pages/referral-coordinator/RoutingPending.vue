@@ -6,40 +6,15 @@ import RouteReferralModal from "../../components/coordinator/RouteReferralModal.
 
 import { coordinatorNavLinks } from "../../config/navigation";
 import { getErrorMessage } from "../../utils/errorHandler";
-// Placeholder API
 import { getSubmittedPendingReferrals } from "../../api/referral";
 import type { RoutingPendingReferral } from "../../types/routingPendingReferral";
 import { mockRoutingPendingReferrals } from "../../data/mockRoutingPendingReferrals.ts";
 import RoutingPendingTable from "../../components/coordinator/RoutingPendingTable.vue";
 
-const user = ref({
-  name: "Sarah Mitchell",
-  welcomeName: "Sarah",
-  role: "Referral Coordinator",
-  initials: "SM",
-});
-
-const mockFacilities = [
-  {
-    facilityId: 1,
-    facilityName: "City Medical Center - Cardiology",
-    availableSpecialists: 4,
-  },
-  {
-    facilityId: 2,
-    facilityName: "Regional Hospital - Cardiology Unit",
-    availableSpecialists: 2,
-  },
-  {
-    facilityId: 3,
-    facilityName: "Metro Health - Cardiac Sciences",
-    availableSpecialists: 6,
-  },
-];
-
 const referrals = ref<RoutingPendingReferral[]>([]);
 const loading = ref(false);
 const errorMessage = ref("");
+const successMessage = ref("");
 const selectedReferral = ref<any | null>(null);
 const showRouteModal = ref(false);
 
@@ -50,7 +25,12 @@ const loadReferrals = async () => {
   try {
     const response = await getSubmittedPendingReferrals();
 
-    referrals.value = response.data.data ?? [];
+    referrals.value = (response.data.data ?? []).map((referral) => ({
+      ...referral,
+      status: referral.status as RoutingPendingReferral["status"],
+      urgency: referral.urgency as RoutingPendingReferral["urgency"],
+      diagnosisCode: referral.diagnosisCode ?? "",
+    }));
   } catch (error) {
     console.error("Failed to load referrals:", error);
 
@@ -64,9 +44,10 @@ const loadReferrals = async () => {
 
 const openRouteModal = async (referral: RoutingPendingReferral) => {
   try {
+    successMessage.value = "";
+
     selectedReferral.value = {
       ...referral,
-      facilities: mockFacilities,
     };
 
     showRouteModal.value = true;
@@ -82,10 +63,16 @@ const closeRouteModal = () => {
   selectedReferral.value = null;
 };
 
-const handleSuccess = async () => {
+const handleSuccess = async (facilityCount: number) => {
   try {
+    const referralId = selectedReferral.value?.referralId;
+
     closeRouteModal();
     await loadReferrals();
+
+    successMessage.value = `Referral #${referralId} was routed successfully to ${facilityCount} facilit${
+      facilityCount === 1 ? "y" : "ies"
+    }.`;
   } catch (error) {
     console.error("Failed to refresh referrals:", error);
 
@@ -103,6 +90,20 @@ onMounted(loadReferrals);
     subtitle="Route submitted referrals to other facilities"
     :notification-count="2"
   >
+    <div
+      v-if="errorMessage"
+      class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <div
+      v-if="successMessage"
+      class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700"
+    >
+      {{ successMessage }}
+    </div>
+
     <RoutingPendingTable
       :referrals="referrals"
       show-filters

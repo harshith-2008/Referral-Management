@@ -6,7 +6,8 @@ import NavIcon from "../icons/NavIcon.vue";
 
 import type { NavLink, SidebarUser } from "../../types/navigation";
 
-import { logout, getMe } from "../../api/authApi";
+import { logout } from "../../api/authApi";
+import { clearCurrentUser, getCurrentUser } from "../../utils/currentUser";
 
 const props = defineProps<{
   navLinks: NavLink[];
@@ -42,8 +43,7 @@ const userInitials = computed(() => user.value.initials);
 
 onMounted(async () => {
   try {
-    const res = await getMe();
-    const data = res.data.data;
+    const data = await getCurrentUser();
 
     user.value = {
       name: `${data.firstName} ${data.lastName}`,
@@ -63,6 +63,7 @@ const handleLogout = async () => {
   }
 
   localStorage.removeItem("token");
+  clearCurrentUser();
 
   router.push("/login");
 };
@@ -81,7 +82,7 @@ const handleLogout = async () => {
         </div>
         <div>
           <p class="text-[15px] font-semibold text-white leading-tight">
-            ReferralHub
+            Referral Manager
           </p>
           <p class="text-[11px] text-slate-500 mt-0.5">Care Coordination</p>
         </div>

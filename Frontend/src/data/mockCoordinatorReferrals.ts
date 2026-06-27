@@ -40,7 +40,7 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
     hospitalBranch: "Metro Health — Downtown",
     urgency: "Routine",
     assignedSpecialist: "Dr. Lisa Wong",
-    status: "Scheduled",
+    status: "Accepted",
     date: "2024-06-09",
     dob: "1978-04-22",
     mrn: "MRN-039441",
@@ -71,7 +71,7 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
         timestamp: "2024-06-07 09:45 AM",
       },
       {
-        status: "Scheduled",
+        status: "Accepted",
         title: "Appointment scheduled",
         description:
           "Consultation scheduled with Dr. Lisa Wong on June 18, 2024.",
@@ -176,7 +176,7 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
         timestamp: "2024-05-22 02:45 PM",
       },
       {
-        status: "Scheduled",
+        status: "Accepted",
         title: "Appointment scheduled",
         description: "Follow-up scheduled with Dr. Samuel Lee on May 28, 2024.",
         timestamp: "2024-05-25 11:00 AM",
@@ -232,7 +232,7 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
     hospitalBranch: "City Medical Center — North",
     urgency: "Routine",
     assignedSpecialist: "Dr. James Rivera",
-    status: "Cancelled",
+    status: "Closed",
     date: "2024-06-06",
     dob: "1975-09-30",
     mrn: "MRN-033661",
@@ -257,7 +257,7 @@ export const mockCoordinatorReferrals: CoordinatorReferral[] = [
         timestamp: "2024-06-02 09:00 AM",
       },
       {
-        status: "Cancelled",
+        status: "Closed",
         title: "Referral cancelled",
         description:
           "Patient cancelled elective surgery. Referral no longer required.",

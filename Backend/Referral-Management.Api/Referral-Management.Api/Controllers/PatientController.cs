@@ -20,10 +20,17 @@ namespace Referral_Management.Api.Controllers
             _patientService = patientService;
         }
 
+        [Authorize(Roles = "Specialist")]
         [HttpGet("lookup/{mrn}")]
         public async Task<IActionResult> GetPatientForReferral(string mrn)
         {
-            var result = await _patientService.GetPatientForReferralAsync(mrn);
+            var specialistIdClaim = User.FindFirst("SpecialistId")?.Value;
+
+            if (!int.TryParse(specialistIdClaim, out var specialistId))
+                return Unauthorized();
+
+            var result = await _patientService
+                .GetPatientForReferralAsync(mrn, specialistId);
 
             return Ok(new ApiResponseDTO<PatientReferralLookupDto>
             {
@@ -44,6 +51,7 @@ namespace Referral_Management.Api.Controllers
         }
 
         // ===================== Dashboard =====================
+        [Authorize(Roles = "Patient")]
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
@@ -58,6 +66,7 @@ namespace Referral_Management.Api.Controllers
         }
 
         // ===================== Profile =====================
+        [Authorize(Roles = "Patient")]
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
         {
@@ -71,6 +80,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpPut("profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdatePatientProfileDto dto)
         {
@@ -85,6 +95,7 @@ namespace Referral_Management.Api.Controllers
         }
 
         // ===================== Referrals =====================
+        [Authorize(Roles = "Patient")]
         [HttpGet("referrals")]
         public async Task<IActionResult> GetReferrals()
         {
@@ -98,6 +109,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpGet("referrals/{id:int}")]
         public async Task<IActionResult> GetReferral(int id)
         {
@@ -111,6 +123,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpGet("referrals/{id:int}/status")]
         public async Task<IActionResult> GetReferralStatus(int id)
         {
@@ -125,6 +138,7 @@ namespace Referral_Management.Api.Controllers
         }
 
         // ===================== Appointments =====================
+        [Authorize(Roles = "Patient")]
         [HttpGet("appointments")]
         public async Task<IActionResult> GetAppointments()
         {
@@ -138,6 +152,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpGet("appointments/upcoming")]
         public async Task<IActionResult> GetUpcomingAppointments()
         {
@@ -151,6 +166,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpGet("appointments/history")]
         public async Task<IActionResult> GetAppointmentHistory()
         {
@@ -164,6 +180,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpGet("appointments/{id:int}")]
         public async Task<IActionResult> GetAppointment(int id)
         {

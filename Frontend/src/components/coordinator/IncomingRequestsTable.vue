@@ -7,6 +7,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   view: [referral: any];
+  reject: [referral: any];
 }>();
 
 const searchQuery = ref("");
@@ -38,6 +39,10 @@ const summary = computed(() => ({
 
 const handleView = (referral: any) => {
   emit("view", referral);
+};
+
+const handleReject = (referral: any) => {
+  emit("reject", referral);
 };
 </script>
 
@@ -168,13 +173,23 @@ const handleView = (referral: any) => {
             </td>
 
             <td class="px-6 py-4">
-              <button
-                type="button"
-                class="inline-flex items-center rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
-                @click="handleView(referral)"
-              >
-                View
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
+                  @click="handleView(referral)"
+                >
+                  View
+                </button>
+
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                  @click="handleReject(referral)"
+                >
+                  Reject
+                </button>
+              </div>
             </td>
           </tr>
 

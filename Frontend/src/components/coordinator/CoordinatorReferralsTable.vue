@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 
 import type { ReferralDTO } from "../../types/referral";
+import { formatDate } from "../../utils/date";
 
 import CoordinatorStatusBadge from "./CoordinatorStatusBadge.vue";
 import CoordinatorUrgencyBadge from "./CoordinatorUrgencyBadge.vue";
@@ -31,9 +32,8 @@ const statusOptions = [
   "Requested",
   "Accepted",
   "Rejected",
-  "Scheduled",
   "Completed",
-  "Cancelled",
+  "Closed",
 ];
 
 const urgencyOptions = ["All", "Routine", "Urgent", "Emergency"];
@@ -226,7 +226,7 @@ const handleAction = (referral: ReferralDTO) => {
             </td>
 
             <td class="px-6 py-4 text-sm text-slate-500">
-              {{ new Date(referral.createdAt).toLocaleDateString() }}
+              {{ formatDate(referral.createdAt) }}
             </td>
 
             <td v-if="showActions" class="px-6 py-4">

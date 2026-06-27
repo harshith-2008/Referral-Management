@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { login } from "../../api/authApi";
+import { clearCurrentUser } from "../../utils/currentUser";
 
 const router = useRouter();
 
@@ -22,12 +23,8 @@ const handleLogin = async () => {
       password: password.value,
     });
 
-    console.log(response.data.data);
-    console.log(response.data.data.roleId);
-    console.log(typeof response.data.data.roleId);
-
+    clearCurrentUser();
     localStorage.setItem("token", response.data.data.token);
-    console.log(response.data.data.token);
     localStorage.setItem("roleId", response.data.data.roleId.toString());
 
     switch (response.data.data.roleId) {
@@ -77,7 +74,9 @@ const handleLogin = async () => {
             />
           </svg>
         </div>
-        <h1 class="text-[18px] font-semibold text-white">ReferralHub</h1>
+        <h1 class="text-[18px] font-semibold text-white">
+          Referral Management
+        </h1>
         <p class="text-[12px] text-slate-500 mt-1">Sign in to your account</p>
       </div>
 
