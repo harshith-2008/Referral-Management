@@ -25,10 +25,31 @@ import MyReferrals from "../pages/specialist/MyReferrals.vue";
 
 import ProfileSettingsPage from "../pages/shared/ProfileSettingsPage.vue";
 
+const getHomeRouteForRole = (role: string | null) => {
+  switch (role) {
+    case "Patient":
+      return "/patient";
+    case "ReferralCoordinator":
+      return "/coordinator";
+    case "Specialist":
+      return "/specialist";
+    case "Admin":
+      return "/admin";
+    default:
+      return "/login";
+  }
+};
+
 const router = createRouter({
   history: createWebHistory(),
 
   routes: [
+    {
+      path: "/",
+      redirect: () =>
+        isAuthenticated() ? getHomeRouteForRole(getUserRole()) : "/login",
+    },
+
     // ================= AUTH =================
     {
       path: "/login",
@@ -199,6 +220,10 @@ router.beforeEach((to, _from, next) => {
 
   const auth = isAuthenticated();
   const role = getUserRole();
+
+  if (to.path === "/login" && auth) {
+    return next(getHomeRouteForRole(role));
+  }
 
   // 1. Public route → allow
   if (!requiresAuth) {
