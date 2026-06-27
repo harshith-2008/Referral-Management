@@ -25,9 +25,8 @@ const statusOptions = [
   "Requested",
   "Accepted",
   "Rejected",
-  "Scheduled",
+  "Completed",
   "Closed",
-  "Cancelled",
 ];
 
 const urgencyOptions = ["All", "Urgent", "Emergency", "Routine"];

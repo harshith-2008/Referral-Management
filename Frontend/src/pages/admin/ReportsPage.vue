@@ -251,13 +251,13 @@ const stats = computed<StatCardItem[]>(() => {
           </div>
         </div>
 
-        <!-- Delays -->
+        <!-- Accepted referral delays -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border hover:shadow-md transition">
-          <h3 class="text-lg font-semibold mb-4 text-gray-800">Scheduled Delays</h3>
+          <h3 class="text-lg font-semibold mb-4 text-gray-800">Accepted Referral Delays</h3>
 
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
-              <span>Total</span>
+              <span>Total accepted</span>
               <span>{{ scheduledDelays?.totalScheduled }}</span>
             </div>
             <div class="flex justify-between text-red-600">

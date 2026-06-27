@@ -14,6 +14,7 @@ import {
   rejectReferral,
 } from "../../api/referral";
 import { getErrorMessage } from "../../utils/errorHandler";
+import { formatDate, formatTime } from "../../utils/date";
 
 import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import IncomingRequestsTable from "../../components/coordinator/IncomingRequestsTable.vue";
@@ -57,6 +58,7 @@ const loadRequests = async () => {
 
 const openModal = async (referral: ReferralDTO) => {
   modalError.value = "";
+  successMessage.value = "";
 
   try {
     loading.value = true;
@@ -96,9 +98,21 @@ const closeModal = () => {
   modalError.value = "";
 };
 
-const handleAppointmentSuccess = async () => {
+const handleAppointmentSuccess = async (appointment: {
+  specialistName: string;
+  appointmentDate: string;
+  appointmentTime: string;
+}) => {
+  const referralId = selectedReferral.value?.referralId;
+
   closeModal();
   await loadRequests();
+
+  successMessage.value = `Appointment scheduled successfully for Referral #${referralId} with ${
+    appointment.specialistName
+  } on ${formatDate(appointment.appointmentDate)} at ${formatTime(
+    appointment.appointmentTime,
+  )}.`;
 };
 
 const handleRejectReferral = (referral: ReferralDTO) => {

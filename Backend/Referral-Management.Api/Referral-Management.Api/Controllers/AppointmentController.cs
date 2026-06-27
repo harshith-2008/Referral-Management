@@ -18,7 +18,6 @@ namespace Referral_Management.Api.Controllers
 {
     [Route("api/appointments")]
     [ApiController]
-    [Authorize]
     public class AppointmentController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
@@ -28,6 +27,7 @@ namespace Referral_Management.Api.Controllers
             _appointmentService = appointmentService;
         }
 
+        [Authorize(Roles = "ReferralCoordinator")]
         [HttpGet("available-slots/{specialistId:int}/{date}")]
         public async Task<IActionResult> GetAvailableSlots(
             int specialistId,
@@ -44,6 +44,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Specialist")]
         [HttpGet("schedule/{date}")]
         public async Task<IActionResult> GetSchedule(
             DateOnly date)
@@ -71,6 +72,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "ReferralCoordinator")]
         [HttpPost]
         public async Task<IActionResult> CreateAppointment(
             [FromBody] CreateAppointmentDTO request)
@@ -94,6 +96,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Specialist")]
         [HttpGet("{appointmentId:int}")]
         public async Task<IActionResult> GetAppointmentDetails(
             int appointmentId)
@@ -109,6 +112,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Patient")]
         [HttpGet("user")]
         public async Task<IActionResult> GetUserAppointments()
         {
@@ -126,6 +130,7 @@ namespace Referral_Management.Api.Controllers
             });
         }
 
+        [Authorize(Roles = "Admin,ReferralCoordinator")]
         [HttpPut("update-status")]
         public async Task<IActionResult> UpdateAppointmentStatus(
             [FromBody] UpdateAppointmentStatusDTO request)
@@ -137,6 +142,26 @@ namespace Referral_Management.Api.Controllers
             {
                 Success = true,
                 Message = "Appointment status updated successfully.",
+                Data = result
+            });
+        }
+
+        [Authorize(Roles = "Specialist")]
+        [HttpPut("{appointmentId:int}/complete")]
+        public async Task<IActionResult> CompleteAppointment(int appointmentId)
+        {
+            var specialistIdClaim = User.FindFirst("SpecialistId")?.Value;
+
+            if (!int.TryParse(specialistIdClaim, out var specialistId))
+                return Unauthorized();
+
+            var result = await _appointmentService
+                .MarkAppointmentCompletedAsync(appointmentId, specialistId);
+
+            return Ok(new ApiResponseDTO<AppointmentStatusResponseDTO>
+            {
+                Success = true,
+                Message = "Appointment marked as completed successfully.",
                 Data = result
             });
         }

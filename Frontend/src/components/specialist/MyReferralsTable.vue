@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { ReferralDTO } from "../../types/referral";
+import { formatDate } from "../../utils/date";
 import CoordinatorUrgencyBadge from "../coordinator/CoordinatorUrgencyBadge.vue";
 import type { ReferralUrgency } from "../../types/coordinatorReferral";
 
@@ -249,7 +250,7 @@ const statusCounts = computed(() => ({
             </td>
 
             <td class="px-6 py-4 text-sm text-slate-500">
-              {{ new Date(referral.createdAt).toLocaleDateString() }}
+              {{ formatDate(referral.createdAt) }}
             </td>
 
             <td v-if="showActions" class="px-6 py-4">

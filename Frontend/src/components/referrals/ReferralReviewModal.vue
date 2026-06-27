@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDate } from "../../utils/date";
 import UrgencyBadge from "./UrgencyBadge.vue";
 
 interface ReferralReviewModalReferral {
@@ -149,7 +150,7 @@ defineEmits<{
               Appointment Date
             </p>
             <p class="text-sm font-medium text-slate-800">
-              {{ referral.appointmentDate }}
+              {{ formatDate(referral.appointmentDate) }}
             </p>
           </div>
         </div>

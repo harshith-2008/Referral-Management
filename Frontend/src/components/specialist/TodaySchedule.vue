@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatTime } from "../../utils/date";
+
 export interface ScheduleItem {
   appointmentId: number;
   appointmentTime: string;
@@ -33,7 +35,7 @@ defineProps<{
       >
         <div class="w-[90px] shrink-0 border-r border-blue-100 pr-4">
           <p class="text-sm font-semibold text-blue-600">
-            {{ item.appointmentTime }}
+            {{ formatTime(item.appointmentTime) }}
           </p>
         </div>
 

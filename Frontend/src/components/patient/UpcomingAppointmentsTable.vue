@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AppointmentDTO } from "../../types/patient";
+import { formatDate, formatTime } from "../../utils/date";
 
 defineProps<{
   appointments: AppointmentDTO[];
@@ -44,11 +45,11 @@ defineProps<{
           class="border-t hover:bg-slate-50"
         >
           <td class="px-6 py-4">
-            {{ appointment.appointmentDate }}
+            {{ formatDate(appointment.appointmentDate) }}
           </td>
 
           <td class="px-6 py-4">
-            {{ appointment.appointmentTime }}
+            {{ formatTime(appointment.appointmentTime) }}
           </td>
 
           <td class="px-6 py-4">

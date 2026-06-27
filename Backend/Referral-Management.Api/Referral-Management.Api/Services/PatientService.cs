@@ -15,16 +15,28 @@ namespace Referral_Management.Api.Services
             _context = context;
         }
 
-        public async Task<PatientReferralLookupDto> GetPatientForReferralAsync(string mrn)
+        public async Task<PatientReferralLookupDto> GetPatientForReferralAsync(
+            string mrn,
+            int specialistId)
         {
+            var specialist = await _context.Specialists
+                .AsNoTracking()
+                .Include(s => s.Facility)
+                .FirstOrDefaultAsync(s => s.SpecialistId == specialistId);
+
+            if (specialist == null)
+                throw new NotFoundException("Specialist not found.");
+
             var patient = await _context.Patients
                 .AsNoTracking()
                 .Include(p => p.User)
                 .Include(p => p.PrimaryFacility)
-                .FirstOrDefaultAsync(p => p.Mrn == mrn);
+                .FirstOrDefaultAsync(p =>
+                    p.Mrn == mrn &&
+                    p.PrimaryFacility.HospitalId == specialist.Facility.HospitalId);
 
             if (patient == null)
-                throw new NotFoundException("Patient not found.");
+                throw new NotFoundException("Patient not found in your hospital.");
 
             return new PatientReferralLookupDto
             {

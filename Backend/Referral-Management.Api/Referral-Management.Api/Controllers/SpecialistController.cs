@@ -44,6 +44,7 @@ public class SpecialistController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Specialist")]
     [HttpPost("referral-intake")]
     public async Task<IActionResult> CreateReferralIntake(
     [FromBody] ReferralIntakeCreateDto dto)
@@ -69,6 +70,7 @@ public class SpecialistController : ControllerBase
     }
 
     //Endpoint for getting all the urgencylevels for dropdown
+    [Authorize(Roles = "Specialist")]
     [HttpGet("urgencyLevels")]
     public async Task<IActionResult> GetUrgencies()
     {
@@ -81,6 +83,7 @@ public class SpecialistController : ControllerBase
     }
 
     //Endpoint to get all teh Specialities
+    [Authorize(Roles = "Specialist")]
     [HttpGet("specialities")]
     public async Task<IActionResult> GetSpecialities()
     {

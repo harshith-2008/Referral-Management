@@ -172,13 +172,13 @@ namespace Referral_Management.Api.Services
             if (slotBooked)
                 throw new BadRequestException("Selected slot is already booked.");
 
-            var scheduledReferralStatusId = await _context.ReferralStatuses
-                .Where(s => s.StatusName == "Scheduled")
+            var acceptedReferralStatusId = await _context.ReferralStatuses
+                .Where(s => s.StatusName == "Accepted")
                 .Select(s => s.ReferralStatusId)
                 .FirstOrDefaultAsync();
 
-            if (scheduledReferralStatusId == 0)
-                throw new BadRequestException("Referral status 'Scheduled' not found.");
+            if (acceptedReferralStatusId == 0)
+                throw new BadRequestException("Referral status 'Accepted' not found.");
 
             var scheduledAppointmentStatusId = await _context.AppointmentStatuses
                 .Where(s => s.StatusName == "Scheduled")
@@ -212,7 +212,7 @@ namespace Referral_Management.Api.Services
 
             _context.ReferralAssignments.Add(assignment);
 
-            referral.ReferralStatusId = scheduledReferralStatusId;
+            referral.ReferralStatusId = acceptedReferralStatusId;
 
             await _context.SaveChangesAsync();
 
@@ -343,6 +343,57 @@ namespace Referral_Management.Api.Services
                 AppointmentId = appointment.AppointmentId,
                 Status = statusName,
                 Message = "Appointment status updated successfully."
+            };
+        }
+
+        public async Task<AppointmentStatusResponseDTO> MarkAppointmentCompletedAsync(
+            int appointmentId,
+            int specialistId)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.AppointmentStatus)
+                .Include(a => a.Referral)
+                .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+
+            if (appointment == null)
+                throw new BadRequestException("Appointment not found.");
+
+            if (appointment.SpecialistId != specialistId)
+                throw new BadRequestException("You can complete only appointments assigned to you.");
+
+            if (appointment.AppointmentStatus.StatusName == "Cancelled")
+                throw new BadRequestException("Cancelled appointments cannot be completed.");
+
+            if (appointment.AppointmentStatus.StatusName == "Completed")
+                throw new BadRequestException("Appointment is already completed.");
+
+            var completedAppointmentStatusId = await _context.AppointmentStatuses
+                .Where(s => s.StatusName == "Completed")
+                .Select(s => s.AppointmentStatusId)
+                .FirstOrDefaultAsync();
+
+            if (completedAppointmentStatusId == 0)
+                throw new BadRequestException("Appointment status 'Completed' not found.");
+
+            var completedReferralStatusId = await _context.ReferralStatuses
+                .Where(s => s.StatusName == "Completed")
+                .Select(s => s.ReferralStatusId)
+                .FirstOrDefaultAsync();
+
+            if (completedReferralStatusId == 0)
+                throw new BadRequestException("Referral status 'Completed' not found.");
+
+            appointment.AppointmentStatusId = completedAppointmentStatusId;
+            appointment.Referral.ReferralStatusId = completedReferralStatusId;
+            appointment.Referral.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new AppointmentStatusResponseDTO
+            {
+                AppointmentId = appointment.AppointmentId,
+                Status = "Completed",
+                Message = "Appointment and referral marked as completed."
             };
         }
     }

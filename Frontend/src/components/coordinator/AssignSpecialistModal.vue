@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 import type {
   ReferralDTO,
   ReferralDetailDTO,
   SpecialistMatchDTO,
 } from "../../types/referral";
+import { formatTime } from "../../utils/date";
 
 import { getAvailableSlots, createAppointment } from "../../api/appointment";
 
@@ -17,7 +18,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  success: [];
+  success: [appointment: {
+    specialistName: string;
+    appointmentDate: string;
+    appointmentTime: string;
+  }];
 }>();
 
 const errorMessage = ref("");
@@ -29,6 +34,12 @@ const selectedSpecialistId = ref<number>();
 const selectedDate = ref("");
 const slots = ref<any[]>([]);
 const selectedSlot = ref("");
+
+const selectedSpecialist = computed(() =>
+  props.specialists.find(
+    (specialist) => specialist.specialistId === selectedSpecialistId.value,
+  ),
+);
 
 watch([selectedSpecialistId, selectedDate], async () => {
   slots.value = [];
@@ -88,7 +99,11 @@ const scheduleAppointment = async () => {
       appointmentTime: selectedSlot.value,
     });
 
-    emit("success");
+    emit("success", {
+      specialistName: selectedSpecialist.value?.specialistName ?? "the specialist",
+      appointmentDate: selectedDate.value,
+      appointmentTime: selectedSlot.value,
+    });
   } catch (error: any) {
     errorMessage.value =
       error?.response?.data?.message ?? "Unable to schedule appointment.";
@@ -334,7 +349,7 @@ const scheduleAppointment = async () => {
               "
               @click="selectedSlot = slot.startTime"
             >
-              {{ slot.startTime }}
+              {{ formatTime(slot.startTime) }}
             </button>
           </div>
         </div>

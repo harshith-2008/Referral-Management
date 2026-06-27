@@ -6,6 +6,10 @@ import StatsCards from "../../components/specialist/StatsCards.vue";
 
 import { patientNavLinks } from "../../config/navigation";
 import { getDashboard } from "../../api/patient";
+import {
+  formatDate as formatReadableDate,
+  formatTime as formatReadableTime,
+} from "../../utils/date";
 
 import type { PatientDashboardDTO } from "../../types/patient";
 import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
@@ -75,14 +79,14 @@ const stats = computed<StatCardItem[]>(() => [
 ]);
 
 const formatDate = (date: string) =>
-  new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+  formatReadableDate(date, {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
   });
 
-const formatTime = (time: string) => time?.slice(0, 5) || "—";
+const formatTime = (time: string) => formatReadableTime(time);
 
 onMounted(loadDashboard);
 </script>

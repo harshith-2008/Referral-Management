@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  success: [];
+  success: [facilityCount: number];
 }>();
 
 const facilities = ref<FacilitiesDropdownResponseDTO>({
@@ -124,7 +124,7 @@ const submitRouting = async () => {
       destinationFacilityIds: selectedFacilities.value,
     });
 
-    emit("success");
+    emit("success", selectedFacilities.value.length);
   } catch (error) {
     routingError.value = getErrorMessage(error);
   } finally {

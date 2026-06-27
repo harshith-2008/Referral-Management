@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDate, formatTime } from "../../utils/date";
+
 export interface AppointmentDetailsDTO {
   appointmentId: number;
   referralId: number;
@@ -142,7 +144,7 @@ defineEmits<{
                   Date
                 </p>
                 <p class="text-sm font-semibold text-slate-900">
-                  {{ appointment.appointmentDate }}
+                  {{ formatDate(appointment.appointmentDate) }}
                 </p>
               </div>
               <div>
@@ -152,7 +154,7 @@ defineEmits<{
                   Time
                 </p>
                 <p class="text-sm font-semibold text-slate-900">
-                  {{ appointment.appointmentTime }}
+                  {{ formatTime(appointment.appointmentTime) }}
                 </p>
               </div>
             </div>

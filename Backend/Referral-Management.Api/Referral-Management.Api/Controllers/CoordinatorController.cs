@@ -8,6 +8,7 @@ namespace Referral_Management.Api.Controllers;
 
 [ApiController]
 [Route("api/coordinator")]
+[Authorize(Roles = "ReferralCoordinator")]
 public class CoordinatorController : ControllerBase
 {
     private readonly ICoordinatorService _coordinatorService;
@@ -17,7 +18,6 @@ public class CoordinatorController : ControllerBase
         _coordinatorService = coordinatorService;
     }
 
-    [AllowAnonymous]
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
     {

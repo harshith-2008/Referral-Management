@@ -18,6 +18,7 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<ActionResult<RegisterResponseDTO>> Register(
         [FromBody] RegisterUserDTO registerUserDTO)
@@ -31,6 +32,7 @@ public class AuthController : ControllerBase
         });
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDTO>> Login(
         [FromBody] LoginDTO loginDTO)
@@ -45,7 +47,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin,Patient,ReferralCoordinator,Specialist")]
     [HttpGet("me")]
     public async Task<IActionResult> Me()
     {

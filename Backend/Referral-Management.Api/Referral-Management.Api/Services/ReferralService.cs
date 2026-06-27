@@ -104,7 +104,6 @@ public class ReferralService : IReferralService
         // Accepted and after → Destination Facility
         var primaryFacilityName =
             referral.ReferralStatus.StatusName == "Accepted"
-            || referral.ReferralStatus.StatusName == "Scheduled"
             || referral.ReferralStatus.StatusName == "Completed"
                 ? referral.DestinationFacility.FacilityName
                 : referral.OriginFacility.FacilityName;

@@ -5,6 +5,7 @@ import {
 } from "../../types/coordinatorReferral";
 
 import type { ReferralDTO } from "../../types/referral";
+import { formatDateTime } from "../../utils/date";
 
 import CoordinatorStatusBadge from "./CoordinatorStatusBadge.vue";
 import CoordinatorUrgencyBadge from "./CoordinatorUrgencyBadge.vue";
@@ -85,7 +86,7 @@ defineEmits<{
                 },
                 {
                   label: 'Created At',
-                  value: new Date(referral.createdAt).toLocaleString(),
+                  value: formatDateTime(referral.createdAt),
                 },
               ]"
               :key="item.label"
@@ -165,7 +166,7 @@ defineEmits<{
                     Created
                   </p>
                   <p class="text-xs text-slate-500">
-                    {{ new Date(referral.createdAt).toLocaleString() }}
+                    {{ formatDateTime(referral.createdAt) }}
                   </p>
                 </div>
               </div>

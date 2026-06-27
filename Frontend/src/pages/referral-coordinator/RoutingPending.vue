@@ -14,6 +14,7 @@ import RoutingPendingTable from "../../components/coordinator/RoutingPendingTabl
 const referrals = ref<RoutingPendingReferral[]>([]);
 const loading = ref(false);
 const errorMessage = ref("");
+const successMessage = ref("");
 const selectedReferral = ref<any | null>(null);
 const showRouteModal = ref(false);
 
@@ -43,6 +44,8 @@ const loadReferrals = async () => {
 
 const openRouteModal = async (referral: RoutingPendingReferral) => {
   try {
+    successMessage.value = "";
+
     selectedReferral.value = {
       ...referral,
     };
@@ -60,10 +63,16 @@ const closeRouteModal = () => {
   selectedReferral.value = null;
 };
 
-const handleSuccess = async () => {
+const handleSuccess = async (facilityCount: number) => {
   try {
+    const referralId = selectedReferral.value?.referralId;
+
     closeRouteModal();
     await loadReferrals();
+
+    successMessage.value = `Referral #${referralId} was routed successfully to ${facilityCount} facilit${
+      facilityCount === 1 ? "y" : "ies"
+    }.`;
   } catch (error) {
     console.error("Failed to refresh referrals:", error);
 
@@ -86,6 +95,13 @@ onMounted(loadReferrals);
       class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700"
     >
       {{ errorMessage }}
+    </div>
+
+    <div
+      v-if="successMessage"
+      class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700"
+    >
+      {{ successMessage }}
     </div>
 
     <RoutingPendingTable

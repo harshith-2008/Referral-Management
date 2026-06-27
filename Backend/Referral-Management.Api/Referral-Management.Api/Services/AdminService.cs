@@ -43,8 +43,7 @@ public class AdminService : IAdminService
             PendingReferrals = await _context.Referrals.CountAsync(r =>
                 r.ReferralStatus.StatusName == "Requested" ||
                 r.ReferralStatus.StatusName == "Submitted" ||
-                r.ReferralStatus.StatusName == "Accepted" ||
-                r.ReferralStatus.StatusName == "Scheduled"
+                r.ReferralStatus.StatusName == "Accepted"
 ),
 
 
@@ -52,7 +51,8 @@ public class AdminService : IAdminService
                 .CountAsync(r => r.ReferralStatus.StatusName == "Completed"),
 
             CancelledReferrals = await _context.Referrals
-                .CountAsync(r => r.ReferralStatus.StatusName == "Cancelled"),
+                .CountAsync(r => r.ReferralStatus.StatusName == "Rejected" ||
+                                 r.ReferralStatus.StatusName == "Closed"),
 
             AppointmentsToday = await _context.Appointments
                 .CountAsync(a => a.AppointmentDate == today && a.AppointmentTime > nowTime)
@@ -251,7 +251,7 @@ public class AdminService : IAdminService
         var scheduled = await _context.Referrals
             .Where(r =>
                 r.CreatedAt.HasValue &&
-                r.ReferralStatus.StatusName == "Scheduled"
+                r.ReferralStatus.StatusName == "Accepted"
             )
             .Select(r => new
             {

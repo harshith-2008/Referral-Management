@@ -11,8 +11,8 @@ export interface IncomingRequest {
   originFacility: string;
   destinationFacility: string;
 
-  specialty: CoordinatorReferralStatus;
+  specialty: string;
   urgency: ReferralUrgency;
 
-  status: string;
+  status: CoordinatorReferralStatus;
 }
