@@ -27,23 +27,32 @@ public class AdminService : IAdminService
     }
 
     // ================= DASHBOARD =================
+
     public async Task<AdminDashboardDto> GetDashboardAsync()
     {
+        var totalUsers = await _context.Users.CountAsync();
+        var totalPatients = await _context.Patients.CountAsync();
+        var totalSpecialists = await _context.Specialists.CountAsync();
+        var totalReferrals = await _context.Referrals.CountAsync();
+
+        // ✅ Only your hospital facilities
+        var totalFacilities = await _context.Facilities
+            .Where(f => f.HospitalId == 1)
+            .CountAsync();
+
         return new AdminDashboardDto
         {
-            TotalUsers = await _context.Users.CountAsync(),
-            TotalPatients = await _context.Patients.CountAsync(),
-            TotalSpecialists = await _context.Specialists.CountAsync(),
-            TotalReferrals = await _context.Referrals.CountAsync(),
-
+            TotalUsers = totalUsers,
+            TotalPatients = totalPatients,
+            TotalSpecialists = totalSpecialists,
+            TotalReferrals = totalReferrals,
 
             PendingReferrals = await _context.Referrals.CountAsync(r =>
                 r.ReferralStatus.StatusName == "Requested" ||
                 r.ReferralStatus.StatusName == "Submitted" ||
                 r.ReferralStatus.StatusName == "Accepted" ||
                 r.ReferralStatus.StatusName == "Scheduled"
-),
-
+            ),
 
             CompletedReferrals = await _context.Referrals
                 .CountAsync(r => r.ReferralStatus.StatusName == "Completed"),
@@ -52,9 +61,23 @@ public class AdminService : IAdminService
                 .CountAsync(r => r.ReferralStatus.StatusName == "Cancelled"),
 
             AppointmentsToday = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate == DateOnly.FromDateTime(DateTime.UtcNow))
+                .CountAsync(a => a.AppointmentDate == DateOnly.FromDateTime(DateTime.UtcNow)),
+
+
+            // ✅ ✅ NEW METRICS ✅ ✅
+
+            // 👉 Referrals per Patient
+            ReferralsPerPatient = totalPatients == 0
+                ? 0
+                : (double)totalReferrals / totalPatients,
+
+            // 👉 Average referrals per facility (ONLY your hospital)
+            AverageReferralsPerFacility = totalFacilities == 0
+                ? 0
+                : (double)totalReferrals / totalFacilities
         };
     }
+
 
     // ================= REFERRAL LEAKAGE =================
     public async Task<ReferralLeakageDto> GetReferralLeakageAsync()

@@ -9,4 +9,8 @@ public class AdminDashboardDto
     public int CompletedReferrals { get; set; }
     public int CancelledReferrals { get; set; }
     public int AppointmentsToday { get; set; }
+
+    public double ReferralsPerPatient { get; set; }
+    public double AverageReferralsPerFacility { get; set; }
+
 }
