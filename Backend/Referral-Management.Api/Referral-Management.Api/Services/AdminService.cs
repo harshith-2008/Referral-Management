@@ -27,6 +27,7 @@ public class AdminService : IAdminService
     }
 
     // ================= DASHBOARD =================
+
     public async Task<AdminDashboardDto> GetDashboardAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
@@ -34,11 +35,10 @@ public class AdminService : IAdminService
 
         return new AdminDashboardDto
         {
-            TotalUsers = await _context.Users.CountAsync(),
-            TotalPatients = await _context.Patients.CountAsync(),
-            TotalSpecialists = await _context.Specialists.CountAsync(),
-            TotalReferrals = await _context.Referrals.CountAsync(),
-
+            TotalUsers = totalUsers,
+            TotalPatients = totalPatients,
+            TotalSpecialists = totalSpecialists,
+            TotalReferrals = totalReferrals,
 
             PendingReferrals = await _context.Referrals.CountAsync(r =>
                 r.ReferralStatus.StatusName == "Requested" ||
@@ -59,41 +59,36 @@ public class AdminService : IAdminService
         };
     }
 
+
     // ================= REFERRAL LEAKAGE =================
     public async Task<ReferralLeakageDto> GetReferralLeakageAsync()
     {
-        var total = await _context.Referrals.CountAsync();
+        // ✅ Total referrals from your hospital
+        var total = await _context.Referrals
+            .Where(r => r.OriginFacility.HospitalId == 1)
+            .CountAsync();
 
-        // ✅ No appointment
-        var noAppointment = await _context.Referrals
-            .Where(r => !r.Appointments.Any())
-            .Select(r => r.ReferralId)
-            .ToListAsync();
-
-        // ✅ Delayed appointments (> 5 days from creation)
-        var delayed = await _context.Referrals
+        // ✅ Out-of-network routing
+        var outOfNetwork = await _context.Referrals
             .Where(r =>
-                r.Appointments.Any(a =>
-                    r.CreatedAt.HasValue &&
-                    a.AppointmentDate > DateOnly.FromDateTime(r.CreatedAt.Value.AddDays(5))
-                )
+                r.OriginFacility.HospitalId == 1 &&
+                r.DestinationFacility.HospitalId != 1
             )
             .Select(r => r.ReferralId)
             .ToListAsync();
 
-        // ✅ Failed outcomes (Rejected / Closed)
-        var failed = await _context.Referrals
+        // ✅ Rejected referrals (treated as leakage ✅)
+        var rejected = await _context.Referrals
             .Where(r =>
-                r.ReferralStatus.StatusName == "Rejected" ||
-                r.ReferralStatus.StatusName == "Closed"
+                r.OriginFacility.HospitalId == 1 &&
+                r.ReferralStatus.StatusName == "Rejected"
             )
             .Select(r => r.ReferralId)
             .ToListAsync();
 
-        // ✅ Combine all leakage cases WITHOUT duplicates
-        var leakageIds = noAppointment
-            .Union(delayed)
-            .Union(failed)
+        // ✅ Combine WITHOUT duplicates
+        var leakageIds = outOfNetwork
+            .Union(rejected)
             .Distinct()
             .ToList();
 
@@ -105,10 +100,13 @@ public class AdminService : IAdminService
             LeakageCount = leakageCount,
             LeakagePercentage = total == 0 ? 0 : (double)leakageCount / total * 100,
 
-            // ✅ Breakdown (can overlap — that's fine for insight)
-            NoAppointment = noAppointment.Count,
-            DelayedAppointments = delayed.Count,
-            NeverCompleted = failed.Count
+            // ✅ Breakdown
+            OutOfNetwork = outOfNetwork.Count,
+            NeverCompleted = rejected.Count, // ✅ reuse field for rejected
+
+            // ✅ Not used anymore
+            NoAppointment = 0,
+            DelayedAppointments = 0
         };
     }
 
@@ -128,15 +126,20 @@ public class AdminService : IAdminService
     public async Task<List<FacilityLeakageDto>> GetFacilityLeakageAsync()
     {
         return await _context.Referrals
+            .Where(r => r.OriginFacility.HospitalId == 1) // ✅ only your hospital
             .GroupBy(r => r.OriginFacility.FacilityName)
             .Select(g => new FacilityLeakageDto
             {
                 FacilityName = g.Key,
                 TotalReferrals = g.Count(),
+
+                // ✅ Leakage = Out-of-network OR Rejected
                 LeakageCount = g.Count(r =>
-                    !r.Appointments.Any() ||
-                    r.ReferralStatus.StatusName != "Completed")
-            }).ToListAsync();
+                    r.DestinationFacility.HospitalId != 1 ||
+                    r.ReferralStatus.StatusName == "Rejected"
+                )
+            })
+            .ToListAsync();
     }
 
     // ================= SPECIALTY LOAD =================

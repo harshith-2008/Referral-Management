@@ -37,6 +37,12 @@ const referralAging = ref<any>(null);
 const scheduledDelays = ref<any>(null);
 const loading = ref(true);
 
+
+const leakagePercentage = computed(() => {
+  return leakage.value?.leakagePercentage?.toFixed(2);
+});
+
+
 // ✅ Fetch
 onMounted(async () => {
   try {
@@ -84,35 +90,28 @@ const stats = computed<StatCardItem[]>(() => {
   if (!overview.value) return [];
 
   return [
-    {
-      label: "Total Referrals",
-      value: overview.value.totalReferrals,
-      icon: "clipboard",
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-600",
-    },
-    {
-      label: "Facilities",
-      value: facilityLeakage.value.length,
-      icon: "users",
-      iconBg: "bg-blue-50",
-      iconColor: "text-blue-600",
-    },
-    {
-      label: "Patients",
-      value: overview.value.totalPatients,
-      icon: "users",
-      iconBg: "bg-indigo-50",
-      iconColor: "text-indigo-600",
-    },
-    {
-      label: "Specialists",
-      value: overview.value.totalSpecialists,
-      icon: "users",
-      iconBg: "bg-green-50",
-      iconColor: "text-green-600",
-    },
-  ];
+  {
+    label: "Total Referrals",
+    value: overview.value.totalReferrals,
+    icon: "clipboard",
+    iconBg: "bg-purple-50",
+    iconColor: "text-purple-600",
+  },
+  {
+    label: "Referrals per Patient",
+    value: overview.value.referralsPerPatient?.toFixed(2),
+    icon: "users",
+    iconBg: "bg-blue-50",
+    iconColor: "text-blue-600",
+  },
+  {
+    label: "Avg Referrals / Facility",
+    value: overview.value.averageReferralsPerFacility?.toFixed(2),
+    icon: "users",
+    iconBg: "bg-green-50",
+    iconColor: "text-green-600",
+  }
+];
 });
 </script>
 
@@ -132,10 +131,10 @@ const stats = computed<StatCardItem[]>(() => {
       <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-2xl shadow-sm">
         <p class="text-sm text-gray-500">Referral Leakage</p>
         <p class="text-5xl font-bold text-blue-600 mt-2">
-          {{ leakage?.leakagePercentage }}%
+          {{ leakagePercentage }}%
         </p>
         <p class="text-sm text-gray-500 mt-1">
-          Referrals not successfully completed
+          Referrals not retained within network
         </p>
       </div>
 
@@ -233,19 +232,19 @@ const stats = computed<StatCardItem[]>(() => {
 
         <!-- Aging -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border hover:shadow-md transition">
-          <h3 class="text-lg font-semibold mb-4 text-gray-800">Referral Aging</h3>
+          <h3 class="text-lg font-semibold mb-4 text-gray-800">Referral Waiting Time</h3>
 
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between text-green-600">
-              <span>&lt; 3 days</span>
+            <div class="flex justify-between text-black">
+              <span>✅ Recently Added</span>
               <span>{{ referralAging?.lessThan3 }}</span>
             </div>
-            <div class="flex justify-between text-yellow-600">
-              <span>3–7 days</span>
+            <div class="flex justify-between text-black">
+              <span>⚠️ Waiting Moderately</span>
               <span>{{ referralAging?.between3And7 }}</span>
             </div>
-            <div class="flex justify-between text-red-600">
-              <span>&gt; 7 days</span>
+            <div class="flex justify-between text-black">
+              <span>🚨 Waiting Too Long</span>
               <span>{{ referralAging?.moreThan7 }}</span>
             </div>
           </div>
