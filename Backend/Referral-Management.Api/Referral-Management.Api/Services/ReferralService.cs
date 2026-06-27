@@ -31,7 +31,7 @@ public class ReferralService : IReferralService
 
         var facilityId = coordinator.FacilityId;
 
-        return await _context.Referrals
+        var referrals = await _context.Referrals
             .AsNoTracking()
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
@@ -73,6 +73,8 @@ public class ReferralService : IReferralService
                     r.CreatedAt ?? DateTime.UtcNow
             })
             .ToListAsync();
+
+        return referrals;
     }
     public async Task<ReferralDetailDto?> GetReferralDetailsById(int referralId)
     {
@@ -102,7 +104,6 @@ public class ReferralService : IReferralService
         // Accepted and after → Destination Facility
         var primaryFacilityName =
             referral.ReferralStatus.StatusName == "Accepted"
-            || referral.ReferralStatus.StatusName == "Scheduled"
             || referral.ReferralStatus.StatusName == "Completed"
                 ? referral.DestinationFacility.FacilityName
                 : referral.OriginFacility.FacilityName;
@@ -207,6 +208,7 @@ public class ReferralService : IReferralService
         var referral = await _context.Referrals
             .Include(r => r.OriginFacility)
                 .ThenInclude(f => f.Hospital)
+            .Include(r => r.ReferralStatus)
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.ReferralId == referralId);
 
@@ -216,13 +218,20 @@ public class ReferralService : IReferralService
         var originHospitalId = referral.OriginFacility.HospitalId;
         var originFacilityId = referral.OriginFacilityId;
         var requestedSpecialityId = referral.SpecialtyRequestId;
+        var excludedFacilityIds = new HashSet<int> { originFacilityId };
+
+        if (referral.ReferralStatus.StatusName == "Rejected" &&
+            referral.DestinationFacilityId.HasValue)
+        {
+            excludedFacilityIds.Add(referral.DestinationFacilityId.Value);
+        }
 
         // Query facilities (excluding the origin facility) that have specialists with the requested specialty.
         var facilities = await _context.Facilities
             .AsNoTracking()
             .Include(f => f.Hospital)
             .Where(f =>
-                f.FacilityId != originFacilityId &&
+                !excludedFacilityIds.Contains(f.FacilityId) &&
                 f.Specialists.Any(s =>
                     s.Status &&
                     s.SpecialistSpecialities.Any(ss =>
@@ -404,6 +413,39 @@ public class ReferralService : IReferralService
         return referredDtos;
     }
 
+    public async Task RejectReferralAsync(int referralId, int coordinatorId)
+    {
+        var coordinator = await _context.ReferralCoordinators
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.ReferralCoordinatorId == coordinatorId);
+
+        if (coordinator == null)
+            throw new BadRequestException("Referral coordinator not found.");
+
+        var referral = await _context.Referrals
+            .Include(r => r.ReferralStatus)
+            .FirstOrDefaultAsync(r => r.ReferralId == referralId);
+
+        if (referral == null)
+            throw new BadRequestException("Referral not found.");
+
+        if (referral.DestinationFacilityId != coordinator.FacilityId)
+            throw new BadRequestException("You can reject only referrals assigned to your facility.");
+
+        if (referral.ReferralStatus.StatusName != "Requested")
+            throw new BadRequestException("Only requested referrals can be rejected.");
+
+        var rejectedStatusId = await _context.ReferralStatuses
+            .Where(s => s.StatusName == "Rejected")
+            .Select(s => s.ReferralStatusId)
+            .FirstAsync();
+
+        referral.ReferralStatusId = rejectedStatusId;
+        referral.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<List<ReferralDto>> GetSubmittedReferralsForCoordinator(int coordinatorId)
     {
         var coordinator = await _context.ReferralCoordinators
@@ -415,7 +457,7 @@ public class ReferralService : IReferralService
 
         var facilityId = coordinator.FacilityId;
 
-        return await _context.Referrals
+        var referrals = await _context.Referrals
             .AsNoTracking()
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
@@ -426,7 +468,8 @@ public class ReferralService : IReferralService
             .Include(r => r.UrgencyLevel)
             .Where(r =>
                 r.OriginFacilityId == facilityId &&
-                r.ReferralStatus.StatusName == "Submitted")
+                (r.ReferralStatus.StatusName == "Submitted" ||
+                 r.ReferralStatus.StatusName == "Rejected"))
             .Select(r => new ReferralDto
             {
                 ReferralId = r.ReferralId,
@@ -454,9 +497,12 @@ public class ReferralService : IReferralService
                     r.DiagnosisCode,
 
                 CreatedAt =
-                    r.CreatedAt!.Value
+                    r.CreatedAt ?? DateTime.UtcNow,
+                ReferralGroupId = r.ReferralGroupId
             })
             .ToListAsync();
+
+        return GroupReferralRows(referrals);
     }
 
     public async Task<List<ReferralDto>>
@@ -573,6 +619,7 @@ public class ReferralService : IReferralService
             {
                 var representative = group
                     .OrderByDescending(referral => referral.Status == "Accepted")
+                    .ThenByDescending(referral => referral.Status == "Rejected")
                     .ThenByDescending(referral => referral.Status == "Requested")
                     .ThenByDescending(referral => referral.CreatedAt)
                     .First();

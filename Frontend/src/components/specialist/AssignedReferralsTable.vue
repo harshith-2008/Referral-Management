@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SpecialistPatientDTO } from "../../types/referral";
+import { formatDate } from "../../utils/date";
 import UrgencyBadge from "../referrals/UrgencyBadge.vue";
 
 defineProps<{
@@ -79,7 +80,7 @@ defineProps<{
             </td>
 
             <td class="px-6 py-4 text-sm text-slate-700">
-              {{ referral.appointmentDate ?? "Not Scheduled" }}
+              {{ referral.appointmentDate ? formatDate(referral.appointmentDate) : "Not scheduled" }}
             </td>
           </tr>
         </tbody>

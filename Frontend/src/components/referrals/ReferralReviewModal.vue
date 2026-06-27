@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import type { SpecialistPatientDTO } from "../../types/referral";
+import { formatDate } from "../../utils/date";
 import UrgencyBadge from "./UrgencyBadge.vue";
 
+interface ReferralReviewModalReferral {
+  referralId: number;
+  patientName: string;
+  age: number;
+  gender: string;
+  mrn: string;
+  specialty: string;
+  urgency: string;
+  diagnosisCode?: string;
+  appointmentDate?: string;
+}
+
 defineProps<{
-  referral: SpecialistPatientDTO;
+  referral: ReferralReviewModalReferral;
 }>();
 
 defineEmits<{
@@ -138,7 +150,7 @@ defineEmits<{
               Appointment Date
             </p>
             <p class="text-sm font-medium text-slate-800">
-              {{ referral.appointmentDate }}
+              {{ formatDate(referral.appointmentDate) }}
             </p>
           </div>
         </div>

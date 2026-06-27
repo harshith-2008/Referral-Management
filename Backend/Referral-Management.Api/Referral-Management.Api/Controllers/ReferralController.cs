@@ -19,6 +19,7 @@ public class ReferralController : ControllerBase
         _referralService = referralService;
     }
 
+    [Authorize(Roles = "ReferralCoordinator")]
     [HttpGet("requested")]
     public async Task<IActionResult> GetRequestedReferrals()
     {
@@ -41,6 +42,7 @@ public class ReferralController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "ReferralCoordinator,Specialist")]
     [HttpGet("details/{referralId:int}")]
     public async Task<IActionResult> GetReferralDetails(int referralId)
     {
@@ -76,6 +78,7 @@ public class ReferralController : ControllerBase
             Data = result
         });
     }
+    [Authorize(Roles = "ReferralCoordinator")]
     [HttpGet("specialists/{referralId:int}")]
     public async Task<IActionResult> GetMatchingSpecialists(int referralId)
     {
@@ -110,7 +113,7 @@ public class ReferralController : ControllerBase
         });
     }
     // Endpoint for dropdown list
-    [Authorize]
+    [Authorize(Roles = "ReferralCoordinator")]
     [HttpGet("{referralId}/facilities-dropdown")]
     public async Task<IActionResult> GetFacilitiesDropdown(int referralId)
     {
@@ -141,7 +144,7 @@ public class ReferralController : ControllerBase
         });
     }
 
-    [Authorize]
+    [Authorize(Roles = "ReferralCoordinator")]
     [HttpPost("route")]
     public async Task<IActionResult> RouteReferral([FromBody] CreateReferralRequest request)
     {
@@ -164,6 +167,26 @@ public class ReferralController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "ReferralCoordinator")]
+    [HttpPost("{referralId:int}/reject")]
+    public async Task<IActionResult> RejectReferral(int referralId)
+    {
+        var coordinatorIdClaim = User.FindFirst("ReferralCoordinatorId")?.Value;
+
+        if (!int.TryParse(coordinatorIdClaim, out var coordinatorId))
+            return Unauthorized();
+
+        await _referralService.RejectReferralAsync(referralId, coordinatorId);
+
+        return Ok(new ApiResponseDTO<object>
+        {
+            Success = true,
+            Message = "Referral rejected successfully.",
+            Data = null
+        });
+    }
+
+    [Authorize(Roles = "ReferralCoordinator")]
     [HttpGet("submitted")]
     public async Task<IActionResult> GetSubmittedReferrals()
     {
@@ -186,6 +209,7 @@ public class ReferralController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "ReferralCoordinator")]
     [HttpGet("origin-facility")]
     public async Task<IActionResult> GetOriginFacilityReferrals()
     {

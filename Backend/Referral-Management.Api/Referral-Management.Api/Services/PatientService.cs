@@ -15,16 +15,28 @@ namespace Referral_Management.Api.Services
             _context = context;
         }
 
-        public async Task<PatientReferralLookupDto> GetPatientForReferralAsync(string mrn)
+        public async Task<PatientReferralLookupDto> GetPatientForReferralAsync(
+            string mrn,
+            int specialistId)
         {
+            var specialist = await _context.Specialists
+                .AsNoTracking()
+                .Include(s => s.Facility)
+                .FirstOrDefaultAsync(s => s.SpecialistId == specialistId);
+
+            if (specialist == null)
+                throw new NotFoundException("Specialist not found.");
+
             var patient = await _context.Patients
                 .AsNoTracking()
                 .Include(p => p.User)
                 .Include(p => p.PrimaryFacility)
-                .FirstOrDefaultAsync(p => p.Mrn == mrn);
+                .FirstOrDefaultAsync(p =>
+                    p.Mrn == mrn &&
+                    p.PrimaryFacility.HospitalId == specialist.Facility.HospitalId);
 
             if (patient == null)
-                throw new NotFoundException("Patient not found.");
+                throw new NotFoundException("Patient not found in your hospital.");
 
             return new PatientReferralLookupDto
             {
@@ -59,6 +71,16 @@ namespace Referral_Management.Api.Services
                 throw new NotFoundException("Patient not found.");
 
             return patient;
+        }
+
+        private static bool IsUpcomingAppointment(Appointment appointment)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
+            return appointment.AppointmentDate > today ||
+                   (appointment.AppointmentDate == today &&
+                    appointment.AppointmentTime > nowTime);
         }
 
         //==========================================================
@@ -127,7 +149,9 @@ namespace Referral_Management.Api.Services
                 .ToListAsync();
 
             var upcoming = appointments
-                .Where(a => a.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                .Where(IsUpcomingAppointment)
+                .OrderBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
                 .ToList();
 
             return new PatientDashboardDto
@@ -223,7 +247,13 @@ namespace Referral_Management.Api.Services
                 .Include(a => a.AppointmentStatus)
                 .OrderByDescending(a => a.AppointmentDate)
                 .ThenByDescending(a => a.AppointmentTime)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            var upcomingAppointment = appointment
+                .Where(IsUpcomingAppointment)
+                .OrderBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
+                .FirstOrDefault();
 
             return new ReferralDetailsDto
             {
@@ -236,14 +266,14 @@ namespace Referral_Management.Api.Services
                 OriginFacility = r.OriginFacility?.FacilityName ?? string.Empty,
                 DestinationFacility = r.DestinationFacility?.FacilityName ?? string.Empty,
                 CreatedAt = r.CreatedAt ?? DateTime.UtcNow,
-                AppointmentId = appointment?.AppointmentId,
-                AppointmentDate = appointment?.AppointmentDate,
-                AppointmentTime = appointment?.AppointmentTime,
-                AppointmentStatus = appointment?.AppointmentStatus.StatusName,
-                SpecialistName = appointment == null
+                AppointmentId = upcomingAppointment?.AppointmentId,
+                AppointmentDate = upcomingAppointment?.AppointmentDate,
+                AppointmentTime = upcomingAppointment?.AppointmentTime,
+                AppointmentStatus = upcomingAppointment?.AppointmentStatus.StatusName,
+                SpecialistName = upcomingAppointment == null
                     ? null
-                    : appointment.Specialist.User.FirstName + " " + appointment.Specialist.User.LastName,
-                SpecialistFacility = appointment?.Specialist.Facility.FacilityName
+                    : upcomingAppointment.Specialist.User.FirstName + " " + upcomingAppointment.Specialist.User.LastName,
+                SpecialistFacility = upcomingAppointment?.Specialist.Facility.FacilityName
             };
         }
 
@@ -273,11 +303,18 @@ namespace Referral_Management.Api.Services
         public async Task<List<AppointmentDto>> GetAppointmentsAsync(int userId)
         {
             var patient = await GetPatientEntityAsync(userId);
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
             return await _context.Appointments
-                .Where(a => a.PatientId == patient.PatientId)
+                .Where(a =>
+                    a.PatientId == patient.PatientId &&
+                    (a.AppointmentDate > today ||
+                     (a.AppointmentDate == today && a.AppointmentTime > nowTime)))
                 .Include(a => a.Specialist).ThenInclude(s => s.User)
                 .Include(a => a.AppointmentStatus)
+                .OrderBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
                 .Select(a => new AppointmentDto
                 {
                     AppointmentId = a.AppointmentId,
@@ -295,12 +332,17 @@ namespace Referral_Management.Api.Services
         public async Task<List<AppointmentDto>> GetUpcomingAppointmentsAsync(int userId)
         {
             var patient = await GetPatientEntityAsync(userId);
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
             return await _context.Appointments
                 .Where(a => a.PatientId == patient.PatientId &&
-                            a.AppointmentDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                            (a.AppointmentDate > today ||
+                             (a.AppointmentDate == today && a.AppointmentTime > nowTime)))
                 .Include(a => a.Specialist).ThenInclude(s => s.User)
                 .Include(a => a.AppointmentStatus)
+                .OrderBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
                 .Select(a => new AppointmentDto
                 {
                     AppointmentId = a.AppointmentId,
@@ -341,9 +383,15 @@ namespace Referral_Management.Api.Services
         public async Task<AppointmentDetailsDto> GetAppointmentByIdAsync(int userId, int appointmentId)
         {
             var patient = await GetPatientEntityAsync(userId);
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
             var a = await _context.Appointments
-                .Where(a => a.PatientId == patient.PatientId && a.AppointmentId == appointmentId)
+                .Where(a =>
+                    a.PatientId == patient.PatientId &&
+                    a.AppointmentId == appointmentId &&
+                    (a.AppointmentDate > today ||
+                     (a.AppointmentDate == today && a.AppointmentTime > nowTime)))
                 .Include(a => a.Specialist).ThenInclude(s => s.User)
                 .Include(a => a.Specialist).ThenInclude(s => s.Facility)
                 .Include(a => a.AppointmentStatus)

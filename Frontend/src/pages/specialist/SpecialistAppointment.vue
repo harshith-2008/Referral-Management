@@ -7,23 +7,22 @@ import AppointmentsTable from "../../components/specialist/AppointmentsTable.vue
 
 import { specialistNavLinks } from "../../config/navigation";
 
-import { getSchedule, getAppointmentDetails } from "../../api/appointment";
+import {
+  completeAppointment,
+  getAppointmentDetails,
+  getSchedule,
+} from "../../api/appointment";
 
 import { getErrorMessage } from "../../utils/errorHandler";
+import { getTodayInputValue } from "../../utils/date";
 
 import type {
   AppointmentScheduleDTO,
   AppointmentDetailsDTO,
 } from "../../types/appointment";
 
-const user = ref({
-  name: "Dr. James Rivera",
-  welcomeName: "Dr. Rivera",
-  role: "Cardiologist",
-  initials: "JR",
-});
-
-const selectedDate = ref(new Date().toISOString().split("T")[0]);
+const minAppointmentDate = getTodayInputValue();
+const selectedDate = ref(minAppointmentDate);
 
 const appointments = ref<AppointmentScheduleDTO[]>([]);
 
@@ -33,10 +32,19 @@ const loading = ref(false);
 
 const errorMessage = ref("");
 const infoMessage = ref("");
+const successMessage = ref("");
+const completingAppointmentId = ref<number | null>(null);
 
 const loadAppointments = async () => {
   errorMessage.value = "";
   infoMessage.value = "";
+  successMessage.value = "";
+
+  if (selectedDate.value < minAppointmentDate) {
+    selectedDate.value = minAppointmentDate;
+    infoMessage.value = "Past appointment schedules are not available.";
+    return;
+  }
 
   try {
     loading.value = true;
@@ -72,6 +80,33 @@ const closeDetails = () => {
   selectedAppointment.value = null;
 };
 
+const markCompleted = async (appointment: AppointmentScheduleDTO) => {
+  errorMessage.value = "";
+  infoMessage.value = "";
+  successMessage.value = "";
+  completingAppointmentId.value = appointment.appointmentId;
+
+  try {
+    const response = await completeAppointment(appointment.appointmentId);
+    const message =
+      response.data.data?.message ?? "Appointment marked as completed.";
+
+    if (selectedAppointment.value?.appointmentId === appointment.appointmentId) {
+      selectedAppointment.value = {
+        ...selectedAppointment.value,
+        appointmentStatus: "Completed",
+      };
+    }
+
+    await loadAppointments();
+    successMessage.value = message;
+  } catch (error) {
+    errorMessage.value = getErrorMessage(error);
+  } finally {
+    completingAppointmentId.value = null;
+  }
+};
+
 onMounted(loadAppointments);
 </script>
 
@@ -88,6 +123,7 @@ onMounted(loadAppointments);
       <input
         v-model="selectedDate"
         type="date"
+        :min="minAppointmentDate"
         class="rounded-lg border px-4 py-2"
         @change="loadAppointments"
       />
@@ -108,6 +144,13 @@ onMounted(loadAppointments);
     </div>
 
     <div
+      v-if="successMessage"
+      class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+    >
+      {{ successMessage }}
+    </div>
+
+    <div
       v-if="loading"
       class="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500"
     >
@@ -117,7 +160,9 @@ onMounted(loadAppointments);
     <AppointmentsTable
       v-else
       :appointments="appointments"
+      :completing-appointment-id="completingAppointmentId"
       @view="openDetails"
+      @complete="markCompleted"
     />
 
     <AppointmentDetailsModal

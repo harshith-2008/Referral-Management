@@ -29,6 +29,9 @@ public class AdminService : IAdminService
     // ================= DASHBOARD =================
     public async Task<AdminDashboardDto> GetDashboardAsync()
     {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
         return new AdminDashboardDto
         {
             TotalUsers = await _context.Users.CountAsync(),
@@ -40,8 +43,7 @@ public class AdminService : IAdminService
             PendingReferrals = await _context.Referrals.CountAsync(r =>
                 r.ReferralStatus.StatusName == "Requested" ||
                 r.ReferralStatus.StatusName == "Submitted" ||
-                r.ReferralStatus.StatusName == "Accepted" ||
-                r.ReferralStatus.StatusName == "Scheduled"
+                r.ReferralStatus.StatusName == "Accepted"
 ),
 
 
@@ -49,10 +51,11 @@ public class AdminService : IAdminService
                 .CountAsync(r => r.ReferralStatus.StatusName == "Completed"),
 
             CancelledReferrals = await _context.Referrals
-                .CountAsync(r => r.ReferralStatus.StatusName == "Cancelled"),
+                .CountAsync(r => r.ReferralStatus.StatusName == "Rejected" ||
+                                 r.ReferralStatus.StatusName == "Closed"),
 
             AppointmentsToday = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate == DateOnly.FromDateTime(DateTime.UtcNow))
+                .CountAsync(a => a.AppointmentDate == today && a.AppointmentTime > nowTime)
         };
     }
 
@@ -151,17 +154,22 @@ public class AdminService : IAdminService
     // ================= APPOINTMENT ANALYTICS =================
     public async Task<AppointmentAnalyticsDto> GetAppointmentAnalyticsAsync()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
 
         return new AppointmentAnalyticsDto
         {
             TotalAppointments = await _context.Appointments.CountAsync(),
-            Upcoming = await _context.Appointments.CountAsync(a => a.AppointmentDate >= today),
+            Upcoming = await _context.Appointments.CountAsync(a =>
+                a.AppointmentDate > today ||
+                (a.AppointmentDate == today && a.AppointmentTime > nowTime)),
             Completed = await _context.Appointments
                 .CountAsync(a => a.AppointmentStatus.StatusName == "Completed"),
             Missed = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate < today &&
-                                 a.AppointmentStatus.StatusName != "Completed")
+                .CountAsync(a =>
+                    (a.AppointmentDate < today ||
+                     (a.AppointmentDate == today && a.AppointmentTime <= nowTime)) &&
+                    a.AppointmentStatus.StatusName != "Completed")
         };
     }
 
@@ -243,7 +251,7 @@ public class AdminService : IAdminService
         var scheduled = await _context.Referrals
             .Where(r =>
                 r.CreatedAt.HasValue &&
-                r.ReferralStatus.StatusName == "Scheduled"
+                r.ReferralStatus.StatusName == "Accepted"
             )
             .Select(r => new
             {

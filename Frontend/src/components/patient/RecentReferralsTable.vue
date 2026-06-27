@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ReferralDTO } from "../../types/patient";
+import { formatDateTime } from "../../utils/date";
 
 defineProps<{
   referrals: ReferralDTO[];
@@ -64,7 +65,7 @@ defineProps<{
           </td>
 
           <td class="px-6 py-4">
-            {{ referral.createdAt }}
+            {{ formatDateTime(referral.createdAt) }}
           </td>
         </tr>
       </tbody>

@@ -3,7 +3,6 @@ using Referral_Management.Api.DTOs;
 using Referral_Management.Api.Exceptions;
 using Referral_Management.Api.Models;
 using Referral_Management.Api.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace Referral_Management.Api.Services;
 
@@ -18,6 +17,9 @@ public class SpecialistService : ISpecialistService
 
     public async Task<List<SpecialistPatientDto>> GetAssignedPatients(int specialistId)
     {
+        var todayDate = DateOnly.FromDateTime(DateTime.Now);
+        var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+
         var referrals = await _context.ReferralAssignments
             .AsNoTracking()
             .Where(ra => ra.ToSpecialistId == specialistId)
@@ -32,7 +34,7 @@ public class SpecialistService : ISpecialistService
                 .ThenInclude(r => r.Appointments)
             .Include(ra => ra.Referral)
                 .ThenInclude(r => r.ReferralStatus)
-            .Where(ra => ra.Referral.ReferralStatus.StatusName == "Scheduled")
+            .Where(ra => ra.Referral.ReferralStatus.StatusName == "Accepted")
             .ToListAsync();
 
         var result = new List<SpecialistPatientDto>();
@@ -50,11 +52,19 @@ public class SpecialistService : ISpecialistService
                 age--;
 
             // ✅ AppointmentDate FIX (DateOnly → DateTime?)
-            DateTime? appointmentDate = ra.Referral.Appointments
+            var upcomingAppointment = ra.Referral.Appointments
+                .Where(a =>
+                    a.AppointmentDate > todayDate ||
+                    (a.AppointmentDate == todayDate && a.AppointmentTime > nowTime))
                 .OrderBy(a => a.AppointmentDate)
-                .Select(a => a.AppointmentDate.ToDateTime(TimeOnly.MinValue))
-                .Cast<DateTime?>()
+                .ThenBy(a => a.AppointmentTime)
                 .FirstOrDefault();
+
+            if (upcomingAppointment == null)
+                continue;
+
+            DateTime? appointmentDate = upcomingAppointment.AppointmentDate
+                .ToDateTime(TimeOnly.MinValue);
 
             result.Add(new SpecialistPatientDto
             {
@@ -83,11 +93,22 @@ public class SpecialistService : ISpecialistService
         int specialistId,
         ReferralIntakeCreateDto dto)
     {
+        var specialist = await _context.Specialists
+            .Include(s => s.Facility)
+            .FirstOrDefaultAsync(s => s.SpecialistId == specialistId);
+
+        if (specialist == null)
+            throw new NotFoundException("Specialist not found");
+
         var patient = await _context.Patients
+            .Include(p => p.PrimaryFacility)
             .FirstOrDefaultAsync(p => p.PatientId == dto.PatientId);
 
         if (patient == null)
             throw new NotFoundException("Patient not found");
+
+        if (patient.PrimaryFacility.HospitalId != specialist.Facility.HospitalId)
+            throw new BadRequestException("You can create referrals only for patients in your hospital.");
 
         var requestedStatusId = await _context.ReferralStatuses
             .Where(rs => rs.StatusName == "Submitted")

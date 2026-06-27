@@ -12,6 +12,7 @@ import { getAssignedPatients } from "../../api/specialist";
 import { getSchedule } from "../../api/appointment";
 
 import { getErrorMessage } from "../../utils/errorHandler";
+import { formatDate, getTodayInputValue } from "../../utils/date";
 
 import type { StatCardItem } from "../../components/specialist/StatsCards.vue";
 import type { SpecialistPatientDTO } from "../../types/referral";
@@ -22,7 +23,14 @@ const loading = ref(false);
 const errorMessage = ref("");
 const infoMessage = ref("");
 
-const scheduleDate = ref(new Date().toLocaleDateString());
+const scheduleDate = ref(
+  formatDate(getTodayInputValue(), {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }),
+);
 
 const referrals = ref<SpecialistPatientDTO[]>([]);
 const scheduleItems = ref<AppointmentScheduleDTO[]>([]);
@@ -34,7 +42,7 @@ const loadDashboard = async () => {
   infoMessage.value = "";
 
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getTodayInputValue();
 
     const results = await Promise.allSettled([
       getAssignedPatients(),
@@ -106,7 +114,7 @@ const stats = computed<StatCardItem[]>(() => [
     iconColor: "text-blue-600",
   },
   {
-    label: "Scheduled Referrals",
+    label: "Accepted Referrals",
     value: referrals.value.filter((x) => x.appointmentDate).length,
     icon: "check",
     iconBg: "bg-green-50",

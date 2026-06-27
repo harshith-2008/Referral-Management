@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  success: [];
+  success: [facilityCount: number];
 }>();
 
 const facilities = ref<FacilitiesDropdownResponseDTO>({
@@ -60,6 +60,7 @@ const loadingFacilities = ref(false);
 const submitting = ref(false);
 const facilitiesMessage = ref("");
 const facilitiesError = ref("");
+const routingError = ref("");
 
 const loadFacilities = async () => {
   loadingFacilities.value = true;
@@ -97,11 +98,12 @@ const loadFacilities = async () => {
 
 const submitRouting = async () => {
   if (!selectedFacilities.value.length) {
-    alert("Please select at least one facility.");
+    routingError.value = "Please select at least one facility.";
     return;
   }
 
   submitting.value = true;
+  routingError.value = "";
 
   try {
     await routeReferral({
@@ -122,9 +124,9 @@ const submitRouting = async () => {
       destinationFacilityIds: selectedFacilities.value,
     });
 
-    emit("success");
+    emit("success", selectedFacilities.value.length);
   } catch (error) {
-    alert(getErrorMessage(error));
+    routingError.value = getErrorMessage(error);
   } finally {
     submitting.value = false;
   }
@@ -175,6 +177,37 @@ onMounted(loadFacilities);
 
       <!-- Body -->
       <div class="overflow-y-auto flex-1 px-6 py-5 space-y-3">
+        <div
+          v-if="props.referral.status === 'Rejected'"
+          class="rounded-xl border border-red-200 bg-red-50 px-4 py-3"
+        >
+          <p class="text-sm font-semibold text-red-700">
+            This referral was rejected by {{ props.referral.destinationFacility }}.
+          </p>
+          <p class="mt-1 text-xs text-red-600">
+            Choose a different destination facility to route it again. The rejected facility is hidden from this list.
+          </p>
+        </div>
+
+        <div
+          v-if="routingError"
+          class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4 mt-0.5 text-red-400 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <p class="text-sm text-red-600">{{ routingError }}</p>
+        </div>
+
         <!-- Loading -->
         <div
           v-if="loadingFacilities"

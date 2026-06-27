@@ -19,7 +19,7 @@ export const mockReferrals: Referral[] = [
     id: "REF-2024-0887",
     patientName: "Robert Chen",
     urgency: "Routine",
-    status: "Scheduled",
+    status: "Accepted",
     date: "2024-06-08",
     reviewTitle: "Cardiology Referral Review",
     dob: "1972-11-04",

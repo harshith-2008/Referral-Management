@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { formatTime } from "../../utils/date";
 
 export interface AppointmentScheduleDTO {
   appointmentId: number;
@@ -12,16 +13,21 @@ export interface AppointmentScheduleDTO {
 
 const props = defineProps<{
   appointments: AppointmentScheduleDTO[];
+  completingAppointmentId?: number | null;
 }>();
 
 const emit = defineEmits<{
   view: [appointment: AppointmentScheduleDTO];
+  complete: [appointment: AppointmentScheduleDTO];
 }>();
 
 const searchQuery = ref("");
 const statusFilter = ref("All");
 
 const statusOptions = ["All", "Scheduled", "Completed", "Cancelled"];
+
+const canComplete = (appointment: AppointmentScheduleDTO) =>
+  !["Completed", "Cancelled"].includes(appointment.appointmentStatus);
 
 const filteredAppointments = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
@@ -99,7 +105,7 @@ const filteredAppointments = computed(() => {
             </td>
 
             <td class="px-6 py-4 text-sm">
-              {{ appointment.appointmentTime }}
+              {{ formatTime(appointment.appointmentTime) }}
             </td>
 
             <td class="px-6 py-4 font-medium">
@@ -126,12 +132,32 @@ const filteredAppointments = computed(() => {
             </td>
 
             <td class="px-6 py-4">
-              <button
-                class="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
-                @click="emit('view', appointment)"
-              >
-                View
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  class="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
+                  @click="emit('view', appointment)"
+                >
+                  View
+                </button>
+
+                <button
+                  v-if="canComplete(appointment)"
+                  :disabled="props.completingAppointmentId === appointment.appointmentId"
+                  class="rounded-lg border border-emerald-200 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                  :class="
+                    props.completingAppointmentId === appointment.appointmentId
+                      ? 'cursor-not-allowed opacity-60'
+                      : ''
+                  "
+                  @click="emit('complete', appointment)"
+                >
+                  {{
+                    props.completingAppointmentId === appointment.appointmentId
+                      ? "Completing..."
+                      : "Mark Completed"
+                  }}
+                </button>
+              </div>
             </td>
           </tr>
 

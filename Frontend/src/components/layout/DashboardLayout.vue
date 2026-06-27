@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppSidebar from "./AppSidebar.vue";
 import AppNavbar from "./AppNavbar.vue";
-import type { NavLink, SidebarUser } from "../../types/navigation";
+import type { NavLink } from "../../types/navigation";
 
 defineProps<{
   navLinks: NavLink[];

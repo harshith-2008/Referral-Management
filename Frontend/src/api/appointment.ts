@@ -39,3 +39,8 @@ export const updateAppointmentStatus = (data: UpdateAppointmentStatusDTO) =>
     "/appointments/update-status",
     data
   );
+
+export const completeAppointment = (appointmentId: number) =>
+  api.put<ApiResponseDTO<AppointmentStatusResponseDTO>>(
+    `/appointments/${appointmentId}/complete`
+  );

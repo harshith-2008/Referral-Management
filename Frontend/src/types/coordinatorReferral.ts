@@ -3,9 +3,8 @@ export type CoordinatorReferralStatus =
   | "Requested"
   | "Accepted"
   | "Rejected"
-  | "Scheduled"
-  | "Closed"
-  | "Cancelled";
+  | "Completed"
+  | "Closed";
 
 export type ReferralUrgency = "Urgent" | "Routine" | "Emergency";
 
@@ -54,17 +53,13 @@ export const referralStatusDefinitions: Record<
     label: "Rejected",
     description: "Destination hospital declined the referral.",
   },
-  Scheduled: {
-    label: "Scheduled",
-    description: "Appointment was confirmed and scheduled.",
+  Completed: {
+    label: "Completed",
+    description: "Specialist completed the appointment for this referral.",
   },
   Closed: {
     label: "Closed",
-    description: "Appointment was completed.",
-  },
-  Cancelled: {
-    label: "Cancelled",
-    description: "Referral was cancelled before completion.",
+    description: "Referral was closed after another facility was selected.",
   },
 };
 
@@ -73,7 +68,6 @@ export const referralStatusOrder: CoordinatorReferralStatus[] = [
   "Requested",
   "Accepted",
   "Rejected",
-  "Scheduled",
+  "Completed",
   "Closed",
-  "Cancelled",
 ];

@@ -5,6 +5,11 @@ import DashboardLayout from "../../components/layout/DashboardLayout.vue";
 import { patientNavLinks } from "../../config/navigation";
 
 import { getReferrals, getReferral } from "../../api/patient";
+import {
+  formatDate,
+  formatDateTime,
+  formatTime,
+} from "../../utils/date";
 
 import type { ReferralDTO, ReferralDetailsDTO } from "../../types/patient";
 
@@ -16,22 +21,16 @@ const showModal = ref(false);
 const loadingDetails = ref(false);
 const selectedReferral = ref<ReferralDetailsDTO | null>(null);
 
-/* ---------------- FORMATTERS ---------------- */
-const formatDateTime = (date?: string | null) =>
-  date ? new Date(date).toLocaleString() : "—";
-
 const formatAppointmentDate = (date?: string | null) =>
-  date
-    ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "—";
+  formatDate(date, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
 const formatAppointmentTime = (time?: string | null) =>
-  time?.slice(0, 5) || "—";
+  formatTime(time);
 
 /* ---------------- LOAD REFERRALS ---------------- */
 const loadReferrals = async () => {
