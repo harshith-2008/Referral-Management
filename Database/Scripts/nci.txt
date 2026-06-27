@@ -1,0 +1,63 @@
+/* =====================================================
+   REFERRALS TABLE INDEXES
+   ===================================================== */
+
+-- 1. Coordinator dashboard → latest referrals
+CREATE NONCLUSTERED INDEX IX_Referrals_CreatedByCoordinator_CreatedAt
+ON Referral (CreatedByCoordinatorId, CreatedAt DESC);
+
+-- 2. Patient dashboard → get patient referrals
+CREATE NONCLUSTERED INDEX IX_Referrals_PatientId
+ON Referral (PatientId);
+
+-- 3. Specialist → referrals created by specialist
+CREATE NONCLUSTERED INDEX IX_Referrals_FromSpecialistId
+ON Referral (FromSpecialistId);
+
+-- 4. Coordinator routing → facility + status filter
+CREATE NONCLUSTERED INDEX IX_Referrals_DestinationFacility_Status
+ON Referral (DestinationFacilityId, ReferralStatusId);
+
+-- 5. Admin dashboard → status-based analytics over time
+CREATE NONCLUSTERED INDEX IX_Referrals_Status_CreatedAt
+ON Referral (ReferralStatusId, CreatedAt);
+
+/* =====================================================
+   APPOINTMENTS TABLE INDEXES
+   ===================================================== */
+
+-- 6. Slot checking → critical for booking system
+CREATE NONCLUSTERED INDEX IX_Appointments_Specialist_Date_Time
+ON Appointment (SpecialistId, AppointmentDate, AppointmentTime);
+
+-- 7. Patient → appointment history
+CREATE NONCLUSTERED INDEX IX_Appointments_PatientId
+ON Appointment (PatientId);
+
+/* =====================================================
+   PATIENTS TABLE INDEXES
+   ===================================================== */
+
+-- 8. Patient lookup using MRN
+CREATE NONCLUSTERED INDEX IX_Patients_MRN
+ON Patient (Mrn);
+
+-- 9. Map logged-in user to patient
+CREATE NONCLUSTERED INDEX IX_Patients_UserId
+ON Patient (UserId);
+
+/* =====================================================
+   REFERRAL ASSIGNMENTS TABLE INDEXES
+   ===================================================== */
+
+-- 10. Specialist → assigned referrals
+CREATE NONCLUSTERED INDEX IX_ReferralAssignments_ToSpecialist
+ON ReferralAssignment (ToSpecialistId);
+
+/* =====================================================
+   SPECIALISTS TABLE INDEXES
+   ===================================================== */
+
+-- 11. Get active specialists in facility
+CREATE NONCLUSTERED INDEX IX_Specialists_Facility_Status
+ON Specialist (FacilityId, Status);
