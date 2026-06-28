@@ -93,6 +93,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Assigned Referrals",
     value: referrals.value.length,
+    subtext: "Currently on your list",
     icon: "clipboard",
     iconBg: "bg-blue-50",
     iconColor: "text-blue-600",
@@ -102,6 +103,7 @@ const stats = computed<StatCardItem[]>(() => [
     value: referrals.value.filter(
       (x) => x.urgency === "Urgent" || x.urgency === "Emergency",
     ).length,
+    subtext: "Urgent or emergency",
     icon: "clock",
     iconBg: "bg-amber-50",
     iconColor: "text-amber-500",
@@ -109,6 +111,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Appointments Today",
     value: scheduleItems.value.length,
+    subtext: "Scheduled for today",
     icon: "calendar",
     iconBg: "bg-blue-50",
     iconColor: "text-blue-600",
@@ -116,6 +119,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Accepted Referrals",
     value: referrals.value.filter((x) => x.appointmentDate).length,
+    subtext: "Appointments created",
     icon: "check",
     iconBg: "bg-green-50",
     iconColor: "text-green-600",
@@ -123,6 +127,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Total Patients",
     value: new Set(referrals.value.map((x) => x.patientId)).size,
+    subtext: "Unique patients",
     icon: "users",
     iconBg: "bg-purple-50",
     iconColor: "text-purple-600",

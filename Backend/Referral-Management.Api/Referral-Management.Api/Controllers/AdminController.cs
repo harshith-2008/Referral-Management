@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Referral_Management.Api.Services.Interfaces;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/admin")]
@@ -20,7 +21,8 @@ public class AdminController : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers()
     {
-        var users = await _service.GetUsersAsync();
+        var adminUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var users = await _service.GetUsersAsync(adminUserId);
         return Ok(users);
     }
 

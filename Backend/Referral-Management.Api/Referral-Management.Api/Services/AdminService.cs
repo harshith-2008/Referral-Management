@@ -11,10 +11,22 @@ public class AdminService : IAdminService
     {
         _context = context;
     }
-    public async Task<List<UserListDto>> GetUsersAsync()
+    public async Task<List<UserListDto>> GetUsersAsync(int adminUserId)
     {
+        var adminHospitalId = await _context.Users
+            .Where(u => u.UserId == adminUserId && u.Role.RoleName == "Admin")
+            .Select(u => (int?)u.Facility.HospitalId)
+            .FirstOrDefaultAsync();
+
+        if (adminHospitalId == null)
+        {
+            return new List<UserListDto>();
+        }
+
         return await _context.Users
-            .Where(u => u.Role.RoleName != "Admin")
+            .Where(u =>
+                u.Role.RoleName != "Admin" &&
+                u.Facility.HospitalId == adminHospitalId.Value)
             .Select(u => new UserListDto
             {
                 UserId = u.UserId,

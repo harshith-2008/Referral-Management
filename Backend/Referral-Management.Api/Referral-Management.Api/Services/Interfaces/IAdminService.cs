@@ -17,7 +17,7 @@ namespace Referral_Management.Api.Services.Interfaces
         Task<AppointmentAnalyticsDto> GetAppointmentAnalyticsAsync();
 
         Task<List<DailyReferralDto>> GetDailyReferralsAsync();
-        Task<List<UserListDto>> GetUsersAsync();
+        Task<List<UserListDto>> GetUsersAsync(int adminUserId);
 
         Task<List<MonthlyReferralDto>> GetMonthlyReferralAsync();
         Task<List<TopSpecialistDto>> GetTopSpecialistsAsync();

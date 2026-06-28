@@ -51,6 +51,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Total Referrals",
     value: Number(dashboard.value?.totalReferrals ?? 0),
+    subtext: "All referral requests",
     icon: "clipboard",
     iconBg: "bg-blue-50",
     iconColor: "text-blue-600",
@@ -58,6 +59,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Pending Referrals",
     value: Number(dashboard.value?.pendingReferrals ?? 0),
+    subtext: "Still being arranged",
     icon: "clock",
     iconBg: "bg-amber-50",
     iconColor: "text-amber-600",
@@ -65,6 +67,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Completed Referrals",
     value: Number(dashboard.value?.completedReferrals ?? 0),
+    subtext: "Care journey finished",
     icon: "check",
     iconBg: "bg-green-50",
     iconColor: "text-green-600",
@@ -72,6 +75,7 @@ const stats = computed<StatCardItem[]>(() => [
   {
     label: "Upcoming Appointments",
     value: Number(dashboard.value?.upcomingAppointments ?? 0),
+    subtext: "Confirmed care schedule",
     icon: "calendar",
     iconBg: "bg-purple-50",
     iconColor: "text-purple-600",
