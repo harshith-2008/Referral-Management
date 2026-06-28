@@ -8,6 +8,10 @@ import type {
   SpecialtyLoadDTO,
   AppointmentAnalyticsDTO,
   DailyReferralDTO,
+  MonthlyReferralDTO,
+  ReferralAgingDTO,
+  ScheduledDelayDTO,
+  TopSpecialistDTO,
   UserListDTO
 } from "../types/admin";
 
@@ -41,16 +45,16 @@ export const getDailyReferrals = () =>
   api.get<DailyReferralDTO[]>("/admin/analytics/daily-referrals");
 
 export const getMonthlyReferral = () =>
-  api.get("/admin/analytics/monthly-referral");
+  api.get<MonthlyReferralDTO[]>("/admin/analytics/monthly-referral");
 
 export const getTopSpecialists = () =>
-  api.get("/admin/analytics/top-specialists");
+  api.get<TopSpecialistDTO[]>("/admin/analytics/top-specialists");
 
 export const getReferralAging = () =>
-  api.get("/admin/analytics/referral-aging");
+  api.get<ReferralAgingDTO>("/admin/analytics/referral-aging");
 
 export const getScheduledDelays = () =>
-  api.get("/admin/analytics/scheduled-delays");
+  api.get<ScheduledDelayDTO>("/admin/analytics/scheduled-delays");
 
 
 

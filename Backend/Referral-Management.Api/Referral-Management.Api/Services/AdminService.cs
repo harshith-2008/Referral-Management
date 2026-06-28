@@ -32,6 +32,11 @@ public class AdminService : IAdminService
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
         var nowTime = TimeOnly.FromDateTime(DateTime.Now);
+        var totalUsers = await _context.Users.CountAsync(u => u.Role.RoleName != "Admin");
+        var totalPatients = await _context.Patients.CountAsync();
+        var totalSpecialists = await _context.Specialists.CountAsync();
+        var totalReferrals = await _context.Referrals.CountAsync();
+        var totalFacilities = await _context.Facilities.CountAsync();
 
         return new AdminDashboardDto
         {
@@ -55,7 +60,10 @@ public class AdminService : IAdminService
                                  r.ReferralStatus.StatusName == "Closed"),
 
             AppointmentsToday = await _context.Appointments
-                .CountAsync(a => a.AppointmentDate == today && a.AppointmentTime > nowTime)
+                .CountAsync(a => a.AppointmentDate == today && a.AppointmentTime > nowTime),
+
+            ReferralsPerPatient = totalPatients == 0 ? 0 : (double)totalReferrals / totalPatients,
+            AverageReferralsPerFacility = totalFacilities == 0 ? 0 : (double)totalReferrals / totalFacilities
         };
     }
 

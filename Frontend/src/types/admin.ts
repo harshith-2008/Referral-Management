@@ -7,6 +7,8 @@ export interface AdminDashboardDTO {
   completedReferrals: number;
   cancelledReferrals: number;
   appointmentsToday: number;
+  referralsPerPatient: number;
+  averageReferralsPerFacility: number;
 }
 
 export interface UserListDTO {
@@ -64,6 +66,7 @@ export interface ReferralLeakageDTO {
   noAppointment: number;
   delayedAppointments: number;
   neverCompleted: number;
+  outOfNetwork: number;
 }
 
 export interface SpecialtyLoadDTO {
