@@ -33,8 +33,16 @@ namespace Referral_Management.Api.Controllers
             int specialistId,
             DateOnly date)
         {
+            var coordinatorIdClaim =
+                User.FindFirst("ReferralCoordinatorId")?.Value;
+
+            if (string.IsNullOrEmpty(coordinatorIdClaim))
+                return Unauthorized();
+
+            int coordinatorId = int.Parse(coordinatorIdClaim);
+
             var result = await _appointmentService
-                .GetAvailableSlotsAsync(specialistId, date);
+                .GetAvailableSlotsAsync(specialistId, date, coordinatorId);
 
             return Ok(new ApiResponseDTO<AvailableSlotsResponseDTO>
             {

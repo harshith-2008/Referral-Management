@@ -15,8 +15,43 @@ namespace Referral_Management.Api.Services
             _context = context;
         }
 
+        private static bool IsTimeInsideShift(TimeOnly appointmentTime, TimeOnly shiftStart, TimeOnly shiftEnd)
+        {
+            if (shiftStart == shiftEnd)
+            {
+                return false;
+            }
 
-        public async Task<AvailableSlotsResponseDTO> GetAvailableSlotsAsync(int specialistId, DateOnly date)
+            if (shiftStart < shiftEnd)
+            {
+                return appointmentTime >= shiftStart && appointmentTime < shiftEnd;
+            }
+
+            return appointmentTime >= shiftStart || appointmentTime < shiftEnd;
+        }
+
+        private static List<TimeOnly> BuildHourlyShiftSlots(TimeOnly shiftStart, TimeOnly shiftEnd)
+        {
+            var slots = new List<TimeOnly>();
+
+            if (shiftStart == shiftEnd)
+            {
+                return slots;
+            }
+
+            var currentSlot = shiftStart;
+
+            for (var i = 0; i < 24 && currentSlot != shiftEnd; i++)
+            {
+                slots.Add(currentSlot);
+                currentSlot = currentSlot.AddHours(1);
+            }
+
+            return slots;
+        }
+
+
+        public async Task<AvailableSlotsResponseDTO> GetAvailableSlotsAsync(int specialistId, DateOnly date, int coordinatorId)
         {
             var today = DateOnly.FromDateTime(DateTime.Now);
             var nowTime = TimeOnly.FromDateTime(DateTime.Now);
@@ -36,6 +71,22 @@ namespace Referral_Management.Api.Services
             if (specialist == null)
             {
                 throw new BadRequestException("Specialist not found.");
+            }
+
+            var coordinatorFacilityId = await _context.ReferralCoordinators
+                .AsNoTracking()
+                .Where(c => c.ReferralCoordinatorId == coordinatorId)
+                .Select(c => (int?)c.FacilityId)
+                .FirstOrDefaultAsync();
+
+            if (coordinatorFacilityId == null)
+            {
+                throw new BadRequestException("Coordinator not found.");
+            }
+
+            if (specialist.FacilityId != coordinatorFacilityId.Value)
+            {
+                throw new BadRequestException("Specialist does not belong to your facility.");
             }
 
             if (!specialist.Status)
@@ -59,10 +110,11 @@ namespace Referral_Management.Api.Services
                 .ToHashSet();
 
             var availableSlots = new List<AvailableSlotDTO>();
+            var shiftSlots = BuildHourlyShiftSlots(
+                specialist.ShiftBlock.StartTime,
+                specialist.ShiftBlock.EndTime);
 
-            var currentSlot = specialist.ShiftBlock.StartTime;
-
-            while (currentSlot < specialist.ShiftBlock.EndTime)
+            foreach (var currentSlot in shiftSlots)
             {
                 var isPastSlotToday = date == today && currentSlot <= nowTime;
 
@@ -75,8 +127,6 @@ namespace Referral_Management.Api.Services
 
                     });
                 }
-
-                currentSlot = currentSlot.AddHours(1);
             }
 
             return new AvailableSlotsResponseDTO
@@ -149,14 +199,31 @@ namespace Referral_Management.Api.Services
             if (specialist == null)
                 throw new BadRequestException("Specialist not found.");
 
+            var coordinatorFacilityId = await _context.ReferralCoordinators
+                .AsNoTracking()
+                .Where(c => c.ReferralCoordinatorId == coordinatorId)
+                .Select(c => (int?)c.FacilityId)
+                .FirstOrDefaultAsync();
+
+            if (coordinatorFacilityId == null)
+                throw new BadRequestException("Coordinator not found.");
+
+            if (specialist.FacilityId != coordinatorFacilityId.Value)
+                throw new BadRequestException("Specialist does not belong to your facility.");
+
+            if (referral.DestinationFacilityId != coordinatorFacilityId.Value)
+                throw new BadRequestException("Referral is not assigned to your facility.");
+
             if (!specialist.Status)
                 throw new BadRequestException("Specialist is inactive.");
 
             if (specialist.ShiftBlock == null)
                 throw new BadRequestException("Shift block not assigned.");
 
-            if (request.AppointmentTime < specialist.ShiftBlock.StartTime ||
-                request.AppointmentTime >= specialist.ShiftBlock.EndTime)
+            if (!IsTimeInsideShift(
+                    request.AppointmentTime,
+                    specialist.ShiftBlock.StartTime,
+                    specialist.ShiftBlock.EndTime))
             {
                 throw new BadRequestException("Invalid appointment slot.");
             }

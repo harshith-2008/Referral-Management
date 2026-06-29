@@ -6,7 +6,7 @@ import type {
   ReferralDetailDTO,
   SpecialistMatchDTO,
 } from "../../types/referral";
-import { formatTime } from "../../utils/date";
+import { formatTime, getTodayInputValue } from "../../utils/date";
 
 import { getAvailableSlots, createAppointment } from "../../api/appointment";
 
@@ -34,6 +34,7 @@ const selectedSpecialistId = ref<number>();
 const selectedDate = ref("");
 const slots = ref<any[]>([]);
 const selectedSlot = ref("");
+const minAppointmentDate = getTodayInputValue();
 
 const selectedSpecialist = computed(() =>
   props.specialists.find(
@@ -299,6 +300,7 @@ const scheduleAppointment = async () => {
           <input
             v-model="selectedDate"
             type="date"
+            :min="minAppointmentDate"
             class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
         </div>

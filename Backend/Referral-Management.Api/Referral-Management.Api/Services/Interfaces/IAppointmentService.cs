@@ -2,7 +2,7 @@
 {
     public interface IAppointmentService
     {
-        Task<AvailableSlotsResponseDTO> GetAvailableSlotsAsync(int specialistId, DateOnly date);
+        Task<AvailableSlotsResponseDTO> GetAvailableSlotsAsync(int specialistId, DateOnly date, int coordinatorId);
 
         Task<DailyScheduleResponseDTO> GetScheduleAsync(int specialistId, DateOnly date);
 
