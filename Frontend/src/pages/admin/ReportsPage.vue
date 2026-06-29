@@ -247,7 +247,7 @@ onMounted(async () => {
           </div>
         </section>
 
-        <section class="grid grid-cols-12 gap-5">
+        <section class="grid gap-5">
           <div
             class="col-span-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
           >
@@ -267,7 +267,7 @@ onMounted(async () => {
               </span>
             </div>
 
-            <div class="mt-8 flex h-64 items-end gap-3">
+            <div class="mt-8 flex h-64 items-end gap-3 w-full">
               <div
                 v-for="item in monthlyReferral"
                 :key="`${item.year}-${item.month}`"
