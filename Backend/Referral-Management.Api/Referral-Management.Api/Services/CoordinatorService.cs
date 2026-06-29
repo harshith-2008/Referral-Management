@@ -23,7 +23,8 @@ public class CoordinatorService : ICoordinatorService
                 .ThenInclude(p => p.User)
             .Include(r => r.ReferralStatus)
             .Where(r => r.CreatedByCoordinatorId == coordinatorId)
-            .OrderByDescending(r => r.CreatedAt)
+            .OrderByDescending(r => r.CreatedAt ?? DateTime.MinValue)
+            .ThenByDescending(r => r.ReferralId)
             .ToListAsync();
 
         return new CoordinatorDashboardDto
@@ -56,7 +57,7 @@ public class CoordinatorService : ICoordinatorService
 
                     Status = r.ReferralStatus.StatusName,
 
-                    CreatedAt = r.CreatedAt!.Value.Date
+                    CreatedAt = r.CreatedAt ?? DateTime.UtcNow
                 })
                 .ToList()
         };
