@@ -295,7 +295,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div
+          <!-- <div
             class="col-span-4 rounded-2xl border border-slate-100 bg-slate-950 p-6 text-white shadow-sm"
           >
             <p class="text-sm font-medium text-slate-400">Referral leakage</p>
@@ -326,7 +326,7 @@ onMounted(async () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </section>
 
         <section class="grid grid-cols-3 gap-5">
